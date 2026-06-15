@@ -473,7 +473,11 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
     <div class="set-label">Gemini API key</div>
     <div class="set-sub">Used only on your device</div>
     <input class="set-input" type="password" id="set-key" placeholder="Paste new key to update…"/>
-    <button class="btn-save" onclick="saveSettings()">Save key</button>
+    <div style="display:flex;gap:8px;margin-top:.65rem;">
+      <button class="btn-save" onclick="saveSettings()">Save</button>
+      <button class="btn-save" onclick="testKey()" style="background:var(--acc);flex:1;">Test key ↗</button>
+    </div>
+    <div id="key-test-result" style="font-size:.75rem;margin-top:.6rem;line-height:1.5;display:none;padding:.6rem .8rem;border-radius:var(--r-md);border:1px solid var(--border);"></div>
     <div class="divider" style="margin-top:1rem;"></div>
     <button class="btn-danger" onclick="clearAll()">Clear all data and start over</button>
     <div class="divider" style="margin-top:1rem;"></div>
@@ -996,6 +1000,36 @@ function openSettings(){
   document.getElementById('set-lon').value=loc.lon||'';
 }
 function closeSettings(){document.getElementById('set-overlay').classList.remove('open');document.getElementById('set-sheet').classList.remove('open');}
+async function testKey(){
+  const k = document.getElementById('set-key').value.trim() || _memKey || localStorage.getItem('saya_k') || gemKey;
+  const res = document.getElementById('key-test-result');
+  res.style.display='block';
+  res.style.background='var(--bg)';
+  res.textContent='Testing…';
+  if(!k){ res.textContent='❌ No key found. Paste your key above first.'; return; }
+  res.textContent='Key found: '+k.slice(0,8)+'… Calling Gemini…';
+  try{
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+k,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:'Say hello in one word.'}]}]})
+    });
+    const d = await r.json();
+    if(d.error){
+      res.style.background='#FCEBEB';
+      res.textContent='❌ Gemini error: '+d.error.message;
+    } else {
+      res.style.background='#EEF5F1';
+      res.textContent='✓ Key works! Gemini says: '+d.candidates[0].content.parts[0].text.trim();
+      // Save the working key
+      gemKey=k; _memKey=k;
+      localStorage.setItem('saya_k',k);
+    }
+  }catch(e){
+    res.style.background='#FCEBEB';
+    res.textContent='❌ Network error: '+e.message;
+  }
+}
 function saveSettings(){const k=document.getElementById('set-key').value.trim();if(k){gemKey=k;svLocal();toast('Key saved');}closeSettings();}
 function quickLoc(name,lat,lon){
   document.getElementById('set-locname').value=name;
