@@ -884,30 +884,51 @@ function renderQueue(){
 }
 async function scanAll(){
   if(scanning)return;
+  if(!gemKey){toast('Add your Gemini API key in Settings first');return;}
   const pend=queue.filter(q=>q.status==='pending');
   if(!pend.length)return;
   scanning=true;
+  document.getElementById('scan-btn').textContent='Scanning…';
+
   for(const item of pend){
-    item.status='scanning';renderQueue();
+    item.status='scanning'; renderQueue();
     try{
-      const b64=item.src.split(',')[1];
-      const res=await callGemVision(b64,item.file.type||'image/jpeg',`You are a clothing expert. Analyze this photo. Respond ONLY as valid JSON, no markdown:
-{"name":"descriptive name e.g. Navy Slim Linen Shirt","type":"one of: t-shirt|casual-shirt|formal-shirt|jeans|linen-pants|formal-pants|shorts|jacket","color":"color name","hex":"best hex code","fit":"slim|regular|relaxed|oversized","fabric":"e.g. cotton linen denim","occasion":"casual|formal|smart-casual|versatile","pattern":"solid|striped|checked|printed|other"}`);
-      const p=JSON.parse(res.replace(/```json|```/g,'').trim());
-      const newItem={id:Date.now()+Math.random(),src:item.src,...p};
+      // Compress image first to ~800px for faster upload to Gemini
+      const compressed = await compressImage(item.src, 800, 0.8);
+      const b64 = compressed.split(',')[1];
+      const mime = 'image/jpeg';
+
+      const prompt = 'You are a clothing expert. Look at this clothing item photo carefully. Respond ONLY as valid JSON with no extra text: {"name":"short descriptive name","type":"t-shirt or casual-shirt or formal-shirt or jeans or linen-pants or formal-pants or shorts or jacket","color":"main color name","hex":"hex code like #4A7A5A","fit":"slim or regular or relaxed or oversized","fabric":"e.g. cotton","occasion":"casual or formal or smart-casual or versatile","pattern":"solid or striped or checked or printed or other"}';
+
+      const res = await callGemVision(b64, mime, prompt);
+      const cleaned = res.replace(/```json|```/g,'').trim();
+      const p = JSON.parse(cleaned);
+
+      // Save compressed version to Firestore
+      const newItem = {id: Date.now()+Math.random(), src: compressed, ...p};
       await saveClothFS(newItem);
       clothes.push(newItem);
-      item.status='done';
-    }catch(e){item.status='err';}
+      item.status = 'done';
+      toast(p.name+' added ✓');
+    }catch(e){
+      console.error('Scan error:', e.message);
+      item.status = 'err';
+      item.errMsg = e.message;
+      toast('Error: '+e.message.slice(0,40));
+    }
     renderQueue();
-    await new Promise(r=>setTimeout(r,350));
+    await new Promise(r=>setTimeout(r,500)); // small gap between requests
   }
+
   scanning=false;
   const done=queue.filter(q=>q.status==='done').length;
+  const errs=queue.filter(q=>q.status==='err').length;
   queue=queue.filter(q=>q.status!=='done');
-  renderQueue();renderWardrobe();renderDust();
-  toast(`${done} item${done!==1?'s':''} added`);
-  if(!queue.length)setTimeout(closeUpload,600);
+  renderQueue(); renderWardrobe(); renderDust();
+  if(done>0) toast(done+' item'+(done!==1?'s':'')+' saved to wardrobe');
+  if(errs>0) toast(errs+' failed — check API key in Settings');
+  document.getElementById('scan-btn').textContent='Scan with AI';
+  if(!queue.length) setTimeout(closeUpload, 800);
 }
 
 // ── GEMINI ──
@@ -917,9 +938,29 @@ async function callGem(prompt){
   return d.candidates[0].content.parts[0].text;
 }
 async function callGemVision(b64,mime,prompt){
-  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${gemKey}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:mime,data:b64}},{text:prompt}]}],generationConfig:{temperature:.2}})});
-  const d=await r.json();if(d.error)throw new Error(d.error.message);
-  return d.candidates[0].content.parts[0].text;
+  if(!gemKey) throw new Error('No API key');
+  // 30 second timeout
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 30000);
+  try{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${gemKey}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      signal: controller.signal,
+      body:JSON.stringify({
+        contents:[{parts:[{inline_data:{mime_type:mime||'image/jpeg',data:b64}},{text:prompt}]}],
+        generationConfig:{temperature:.2}
+      })
+    });
+    clearTimeout(timeout);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    if(d.error) throw new Error(d.error.message);
+    return d.candidates[0].content.parts[0].text;
+  }catch(e){
+    clearTimeout(timeout);
+    throw e;
+  }
 }
 
 // ── NAV ──
