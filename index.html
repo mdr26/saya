@@ -226,6 +226,61 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 
 .spin { display: inline-block; animation: spinr 1s linear infinite; }
 @keyframes spinr { to { transform: rotate(360deg); } }
+
+/* ── WORE THIS ── */
+.wore-btn { width:100%; padding:.65rem; background:var(--acc-bg); border:1px solid #C0DCC8; border-radius:var(--r-md); font-family:var(--sans); font-size:.78rem; font-weight:400; letter-spacing:.06em; color:var(--acc-text); cursor:pointer; margin-bottom:.75rem; display:flex; align-items:center; justify-content:center; gap:6px; transition:background .13s; }
+.wore-btn:active { background:#D8EDE0; }
+.wore-btn.confirmed { background:var(--acc); color:#fff; border-color:var(--acc); pointer-events:none; }
+
+/* ── CAPSULE SCORE ── */
+.capsule-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); padding:1rem; margin-bottom:1rem; }
+.capsule-title { font-size:.72rem; font-weight:400; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); margin-bottom:.85rem; }
+.cap-row { display:flex; align-items:center; gap:.75rem; margin-bottom:.6rem; }
+.cap-label { font-size:.75rem; color:var(--text2); width:90px; flex-shrink:0; font-weight:300; }
+.cap-bar-bg { flex:1; height:5px; background:var(--bg3); border-radius:3px; overflow:hidden; }
+.cap-bar-fill { height:100%; border-radius:3px; background:var(--acc); transition:width .6s ease; }
+.cap-bar-fill.warn { background:var(--warn); }
+.cap-count { font-size:.72rem; color:var(--text3); width:28px; text-align:right; font-weight:300; }
+.cap-verdict { font-size:.8rem; color:var(--text2); line-height:1.6; border-top:1px solid var(--border); padding-top:.75rem; margin-top:.35rem; font-weight:300; }
+.cap-verdict strong { color:var(--text); font-weight:400; }
+
+/* ── PACK TRIP ── */
+.trip-sheet-inner { max-height:82vh; overflow-y:auto; }
+.trip-sheet-inner::-webkit-scrollbar { display:none; }
+.trip-field { margin-bottom:.85rem; }
+.trip-label { font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); font-weight:400; margin-bottom:.45rem; }
+.trip-input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:var(--r-md); padding:.65rem .85rem; color:var(--text); font-family:var(--sans); font-size:.85rem; font-weight:300; outline:none; transition:border-color .13s; }
+.trip-input:focus { border-color:var(--acc); }
+.trip-chips { display:flex; gap:6px; flex-wrap:wrap; }
+.trip-chip { padding:5px 13px; border:1px solid var(--border); border-radius:var(--r-md); font-size:.75rem; color:var(--text2); cursor:pointer; background:var(--bg2); font-weight:300; white-space:nowrap; }
+.trip-chip.on { background:var(--text); border-color:var(--text); color:var(--bg); }
+.trip-result { margin-top:.85rem; }
+.trip-day { border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; margin-bottom:.75rem; }
+.trip-day-head { background:var(--bg3); padding:.6rem .9rem; display:flex; align-items:center; justify-content:space-between; }
+.trip-day-num { font-size:.72rem; font-weight:400; letter-spacing:.08em; color:var(--text); }
+.trip-day-occ { font-size:.65rem; color:var(--text2); font-weight:300; }
+.trip-day-body { padding:.85rem; display:flex; gap:8px; align-items:flex-start; }
+.trip-piece { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; }
+.trip-piece-img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:var(--r-md); border:1px solid var(--border); background:var(--bg3); }
+.trip-piece-sw { width:100%; aspect-ratio:1; border-radius:var(--r-md); border:1px solid var(--border); }
+.trip-piece-lbl { font-size:.62rem; color:var(--text2); text-align:center; line-height:1.3; }
+.trip-plus { display:flex; align-items:center; justify-content:center; padding-top:25%; color:var(--text3); }
+.trip-tip { font-size:.75rem; color:var(--text2); line-height:1.55; border-top:1px solid var(--border); padding:.65rem .85rem; font-weight:300; }
+
+/* ── SHOPPING GAP ── */
+.pg-shop { }
+.shop-scan-btn { width:100%; padding:.85rem; background:var(--text); color:var(--bg); border:none; border-radius:var(--r-md); font-family:var(--sans); font-size:.85rem; font-weight:400; letter-spacing:.08em; cursor:pointer; margin-bottom:1rem; }
+.shop-scan-btn:disabled { opacity:.3; cursor:not-allowed; }
+.gap-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); padding:1rem; margin-bottom:.75rem; }
+.gap-priority { display:inline-block; font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; padding:3px 8px; border-radius:var(--r-sm); font-weight:400; margin-bottom:.6rem; }
+.gap-high { background:#FCEBEB; color:#7A2020; border:1px solid #EEC8C8; }
+.gap-med { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn-br); }
+.gap-low { background:var(--acc-bg); color:var(--acc-text); border:1px solid #C0DCC8; }
+.gap-item { font-size:.9rem; font-weight:400; color:var(--text); margin-bottom:.35rem; }
+.gap-why { font-size:.8rem; color:var(--text2); line-height:1.55; font-weight:300; }
+.gap-trend { font-size:.75rem; color:var(--acc-text); margin-top:.4rem; font-weight:300; font-style:italic; }
+.shop-intro { font-size:.82rem; color:var(--text2); line-height:1.6; margin-bottom:1rem; font-weight:300; }
+
 </style>
 </head>
 <body>
@@ -276,7 +331,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
       <div class="sec-title">Weather</div>
       <div class="card weather-card" style="margin-bottom:1rem;">
         <div>
-          <div class="w-city">Kayamkulam</div>
+          <div class="w-city" id="w-city">Kayamkulam</div>
           <div class="w-temp" id="w-temp">--°</div>
           <div class="w-desc" id="w-desc">Loading…</div>
         </div>
@@ -295,10 +350,14 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 
       <div class="sec-title">Today's outfit</div>
       <div id="outfit-area"></div>
+      <button class="wore-btn" id="wore-btn" onclick="confirmWore()">✓ &nbsp;I wore this today</button>
       <button class="regen-btn" id="regen-btn" onclick="genOutfit()">
         <span class="regen-icon">↺</span> Try another combination
       </button>
 
+      <button class="regen-btn" onclick="openTrip()" style="margin-bottom:1rem;">
+        <span>✈</span> Pack for a trip
+      </button>
       <div id="dust-area"></div>
 
       <div class="sec-title" style="margin-top:.25rem;">Recent outfits</div>
@@ -308,6 +367,11 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
     <!-- WARDROBE -->
     <div class="page" id="pg-wardrobe">
       <div class="stats-row" id="w-stats"></div>
+      <div class="capsule-card" id="capsule-card" style="display:none;">
+        <div class="capsule-title">Wardrobe balance</div>
+        <div id="capsule-bars"></div>
+        <div class="cap-verdict" id="capsule-verdict"></div>
+      </div>
       <div class="filter-row" id="w-filters"></div>
       <div class="w-grid" id="w-grid"></div>
     </div>
@@ -318,6 +382,13 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
       <div class="cal-row" id="cal-row"></div>
       <div class="sec-title">All outfits</div>
       <div class="card" style="padding:.25rem .85rem;" id="hist-list"></div>
+    </div>
+
+    <!-- SHOP PAGE -->
+    <div class="page pg-shop" id="pg-shop">
+      <div class="shop-intro">Saya analyses your wardrobe and checks current fashion trends to tell you exactly what's missing and why it matters right now.</div>
+      <button class="shop-scan-btn" id="shop-scan-btn" onclick="runShopScan()">Analyse my wardrobe ↗</button>
+      <div id="shop-result"></div>
     </div>
   </div>
 
@@ -333,6 +404,10 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
     <div class="nv" onclick="navTo('history',this)">
       <div class="nv-icon">◷</div>
       <div class="nv-label">HISTORY</div>
+    </div>
+    <div class="nv" onclick="navTo('shop',this)">
+      <div class="nv-icon">◈</div>
+      <div class="nv-label">SHOP</div>
     </div>
   </nav>
 
@@ -354,6 +429,41 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   <button class="scan-btn" id="scan-btn" onclick="scanAll()" disabled>Scan with AI</button>
 </div>
 
+<!-- TRIP SHEET -->
+<div class="overlay" id="trip-overlay" onclick="closeTrip()"></div>
+<div class="sheet" id="trip-sheet">
+  <div class="trip-sheet-inner">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Pack for a trip</div>
+    <div class="sheet-sub">Tell Saya where you're going and for how long — it'll plan non-repeating outfits from your wardrobe.</div>
+    <div class="trip-field">
+      <div class="trip-label">Destination</div>
+      <input class="trip-input" id="trip-dest" placeholder="e.g. Wagamon, Munnar, Kochi…"/>
+    </div>
+    <div class="trip-field">
+      <div class="trip-label">Number of days</div>
+      <div class="trip-chips" id="trip-days-chips">
+        <div class="trip-chip on" onclick="setTripDays(2,this)">2 days</div>
+        <div class="trip-chip" onclick="setTripDays(3,this)">3 days</div>
+        <div class="trip-chip" onclick="setTripDays(4,this)">4 days</div>
+        <div class="trip-chip" onclick="setTripDays(5,this)">5 days</div>
+        <div class="trip-chip" onclick="setTripDays(7,this)">1 week</div>
+      </div>
+    </div>
+    <div class="trip-field">
+      <div class="trip-label">Vibe</div>
+      <div class="trip-chips" id="trip-occ-chips">
+        <div class="trip-chip on" onclick="setTripOcc('Casual',this)">Casual</div>
+        <div class="trip-chip" onclick="setTripOcc('Smart casual',this)">Smart casual</div>
+        <div class="trip-chip" onclick="setTripOcc('Formal',this)">Formal</div>
+        <div class="trip-chip" onclick="setTripOcc('Mixed',this)">Mixed</div>
+      </div>
+    </div>
+    <button class="scan-btn" id="trip-gen-btn" onclick="genTrip()">Plan my outfits ↗</button>
+    <div class="trip-result" id="trip-result"></div>
+  </div>
+</div>
+
 <!-- SETTINGS SHEET -->
 <div class="overlay" id="set-overlay" onclick="closeSettings()"></div>
 <div class="sheet" id="set-sheet">
@@ -366,6 +476,26 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
     <button class="btn-save" onclick="saveSettings()">Save key</button>
     <div class="divider" style="margin-top:1rem;"></div>
     <button class="btn-danger" onclick="clearAll()">Clear all data and start over</button>
+    <div class="divider" style="margin-top:1rem;"></div>
+    <div class="set-label">Location</div>
+    <div class="set-sub">Change when you travel. Weather updates instantly.</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;margin-bottom:8px;">
+      <button onclick="quickLoc('Kayamkulam',9.1833,76.5000)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Kayamkulam</button>
+      <button onclick="quickLoc('Kochi',9.9312,76.2673)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Kochi</button>
+      <button onclick="quickLoc('Wagamon',9.6888,76.9029)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Wagamon</button>
+      <button onclick="quickLoc('Munnar',10.0889,77.0595)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Munnar</button>
+      <button onclick="quickLoc('Alleppey',9.4981,76.3388)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Alleppey</button>
+      <button onclick="quickLoc('Kozhikode',11.2588,75.7804)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Kozhikode</button>
+      <button onclick="quickLoc('Thrissur',10.5276,76.2144)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Thrissur</button>
+      <button onclick="quickLoc('Trivandrum',8.5241,76.9366)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Trivandrum</button>
+    </div>
+    <input class="set-input" type="text" id="set-locname" placeholder="Or type any city name…"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+      <input class="set-input" type="number" id="set-lat" placeholder="Latitude" step="0.0001" style="margin-top:0;"/>
+      <input class="set-input" type="number" id="set-lon" placeholder="Longitude" step="0.0001" style="margin-top:0;"/>
+    </div>
+    <div style="font-size:.68rem;color:var(--text3);margin-top:6px;font-weight:300;">Tip: Search "<span style="font-style:italic;">Wagamon coordinates</span>" on Google to get lat/lon.</div>
+    <button class="btn-save" onclick="saveLocation()" style="margin-top:.65rem;">Update location</button>
   </div>
 </div>
 
@@ -374,10 +504,12 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 <script>
 // ── STATE ──
 let clothes=[], history=[], gemKey='', userName='', occ='Casual', curOutfit=null, queue=[], scanning=false, wFilter='all';
+const DEFAULT_LOC={name:'Kayamkulam',lat:9.1833,lon:76.5000};
+let loc=DEFAULT_LOC;
 
 // ── PERSIST ──
-function sv(){try{localStorage.setItem('saya_c',JSON.stringify(clothes));localStorage.setItem('saya_h',JSON.stringify(history));localStorage.setItem('saya_k',gemKey);localStorage.setItem('saya_n',userName);}catch(e){}}
-function ld(){try{clothes=JSON.parse(localStorage.getItem('saya_c')||'[]');history=JSON.parse(localStorage.getItem('saya_h')||'[]');gemKey=localStorage.getItem('saya_k')||'';userName=localStorage.getItem('saya_n')||'';}catch(e){clothes=[];history=[];}}
+function sv(){try{localStorage.setItem('saya_c',JSON.stringify(clothes));localStorage.setItem('saya_h',JSON.stringify(history));localStorage.setItem('saya_k',gemKey);localStorage.setItem('saya_n',userName);localStorage.setItem('saya_loc',JSON.stringify(loc));}catch(e){}}
+function ld(){try{clothes=JSON.parse(localStorage.getItem('saya_c')||'[]');history=JSON.parse(localStorage.getItem('saya_h')||'[]');gemKey=localStorage.getItem('saya_k')||'';userName=localStorage.getItem('saya_n')||'';const sl=localStorage.getItem('saya_loc');if(sl)loc=JSON.parse(sl);else loc=DEFAULT_LOC;}catch(e){clothes=[];history=[];loc=DEFAULT_LOC;}}
 
 // ── BOOT ──
 window.addEventListener('load',()=>{
@@ -433,8 +565,9 @@ function renderGreeting(){
 
 // ── WEATHER (open-meteo, no key needed) ──
 async function fetchWeather(){
+  document.getElementById('w-city').textContent=loc.name;
   try{
-    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=9.1833latitude=8.5241&longitude=76.9366longitude=76.5000&current=temperature_2m,weathercode&timezone=Asia/Kolkata');
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,weathercode&timezone=Asia/Kolkata`);
     const d=await r.json();
     const t=Math.round(d.current.temperature_2m);
     const c=d.current.weathercode;
@@ -472,8 +605,8 @@ async function genOutfit(){
   const wx=window._wx||{temp:32,desc:'hot and humid'};
   const last=history.length?history[history.length-1]:null;
   const avoidLine=last?`Avoid repeating: top id ${last.topId}, bottom id ${last.botId}.`:'';
-  const tDesc=tops.map((t,i)=>`${i}|id:${t.id}|${t.name}|${t.color}|${t.type}|${t.fit||'regular'}|${t.fabric||''}|${t.pattern||'solid'}`).join('\n');
-  const bDesc=bots.map((b,i)=>`${i}|id:${b.id}|${b.name}|${b.color}|${b.type}|${b.fit||'regular'}`).join('\n');
+  const tDesc=tops.map((t,i)=>i+'|id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')+'|'+(t.pattern||'solid')).join('\n');
+  const bDesc=bots.map((b,i)=>i+'|id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type+'|'+(b.fit||'regular')).join('\n');
 
   try{
     const res=await callGem(`You are an expert men's stylist based in Kerala, India.
@@ -481,7 +614,7 @@ Weather: ${wx.temp}°C, ${wx.desc}. Occasion: ${occ}. ${avoidLine}
 
 Tops:\n${tDesc}\nBottoms:\n${bDesc}
 
-Choose the single best complete outfit. Consider color harmony, Kayamkulam heat (${wx.temp}°C), occasion fit, fabric comfort.
+Choose the single best complete outfit. Consider color harmony, ${loc.name} heat (${wx.temp}°C), occasion fit, fabric comfort.
 Respond ONLY as valid JSON, no markdown:
 {"topId":ID,"botId":ID,"tip":"2-sentence practical tip — shoes, tuck, sleeve roll etc.","why":"One sentence on why this color pairing works."}`);
     const p=JSON.parse(res.replace(/```json|```/g,'').trim());
@@ -584,7 +717,7 @@ function renderWardrobe(){
   }).join('');
   updateFab();
 }
-function setWFilter(f){wFilter=f;renderWardrobe();}
+function setWFilter(f){wFilter=f;renderWardrobe();renderCapsule();}
 function delCloth(id){clothes=clothes.filter(c=>c.id!=id);sv();renderWardrobe();renderDust();toast('Removed');}
 
 // ── HISTORY ──
@@ -680,7 +813,7 @@ function navTo(name,el){
   el.classList.add('active');
   updateFab();
   if(name==='history'){renderHistory();renderCalendar();}
-  if(name==='wardrobe')renderWardrobe();
+  if(name==='wardrobe'){renderWardrobe();renderCapsule();}
 }
 function updateFab(){
   const cur=document.querySelector('.page.vis');
@@ -688,13 +821,179 @@ function updateFab(){
 }
 
 // ── SETTINGS ──
-function openSettings(){document.getElementById('set-overlay').classList.add('open');document.getElementById('set-sheet').classList.add('open');document.getElementById('set-key').value=gemKey;}
+function openSettings(){
+  document.getElementById('set-overlay').classList.add('open');
+  document.getElementById('set-sheet').classList.add('open');
+  document.getElementById('set-key').value=gemKey;
+  document.getElementById('set-locname').value=loc.name||'';
+  document.getElementById('set-lat').value=loc.lat||'';
+  document.getElementById('set-lon').value=loc.lon||'';
+}
 function closeSettings(){document.getElementById('set-overlay').classList.remove('open');document.getElementById('set-sheet').classList.remove('open');}
 function saveSettings(){const k=document.getElementById('set-key').value.trim();if(k){gemKey=k;sv();toast('Key saved');}closeSettings();}
+function quickLoc(name,lat,lon){
+  document.getElementById('set-locname').value=name;
+  document.getElementById('set-lat').value=lat;
+  document.getElementById('set-lon').value=lon;
+}
+function saveLocation(){
+  const name=document.getElementById('set-locname').value.trim();
+  const lat=parseFloat(document.getElementById('set-lat').value);
+  const lon=parseFloat(document.getElementById('set-lon').value);
+  if(!name||isNaN(lat)||isNaN(lon)){toast('Fill in all location fields');return;}
+  loc={name,lat,lon};sv();
+  closeSettings();
+  fetchWeather();
+  toast('Location updated to '+name);
+}
 function clearAll(){if(confirm('Clear all data?')){clothes=[];history=[];gemKey='';userName='';localStorage.clear();location.reload();}}
 
 // ── TOAST ──
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+
+// ── FEATURE 1: WORE THIS ──
+function confirmWore(){
+  const btn=document.getElementById('wore-btn');
+  if(!curOutfit)return;
+  // Mark as confirmed wear in history
+  const entry=history.find(h=>h.date===todayStr());
+  if(entry){entry.confirmed=true;sv();}
+  btn.textContent='✓  Worn today — saved to history';
+  btn.classList.add('confirmed');
+  toast('Outfit logged ✓');
+}
+
+// ── FEATURE 2: CAPSULE WARDROBE SCORE ──
+function renderCapsule(){
+  if(!clothes.length){document.getElementById('capsule-card').style.display='none';return;}
+  document.getElementById('capsule-card').style.display='block';
+  const cats=[
+    {key:'t-shirt',label:'T-shirts',ideal:8},
+    {key:'casual-shirt',label:'Casual shirts',ideal:6},
+    {key:'formal-shirt',label:'Formal shirts',ideal:4},
+    {key:'jeans',label:'Jeans',ideal:3},
+    {key:'linen-pants',label:'Linen pants',ideal:3},
+    {key:'formal-pants',label:'Formal pants',ideal:2},
+    {key:'jacket',label:'Jackets',ideal:2},
+  ];
+  const counts=cats.map(c=>({...c,count:clothes.filter(cl=>cl.type===c.key).length}));
+  const maxCount=Math.max(...counts.map(c=>c.count),1);
+  document.getElementById('capsule-bars').innerHTML=counts.map(c=>{
+    const pct=Math.round((c.count/Math.max(c.ideal,1))*100);
+    const over=c.count>c.ideal*1.5;
+    const under=c.count<c.ideal*0.5&&c.ideal>0;
+    return `<div class="cap-row">
+      <div class="cap-label">${c.label}</div>
+      <div class="cap-bar-bg"><div class="cap-bar-fill ${over?'warn':''}" style="width:${Math.min(100,(c.count/maxCount)*100)}%"></div></div>
+      <div class="cap-count">${c.count}</div>
+    </div>`;
+  }).join('');
+
+  // Generate verdict
+  const heaviest=counts.reduce((a,b)=>a.count>b.count?a:b);
+  const lightest=counts.filter(c=>c.ideal>0).reduce((a,b)=>a.count<b.count?a:b);
+  const tops=clothes.filter(c=>['t-shirt','casual-shirt','formal-shirt'].includes(c.type)).length;
+  const bots=clothes.filter(c=>['jeans','linen-pants','formal-pants'].includes(c.type)).length;
+  const ratio=tops&&bots?(tops/bots).toFixed(1):null;
+  let verdict=`<strong>Your wardrobe has ${clothes.length} items.</strong> `;
+  if(ratio) verdict+=`Top-to-bottom ratio is ${ratio}:1 — ${ratio>3?'you have significantly more tops than bottoms. Consider adding more pants.':ratio<1.5?'well balanced.':'reasonable balance.'} `;
+  verdict+=`You have the most <strong>${heaviest.label}</strong> (${heaviest.count}) and fewest <strong>${lightest.label}</strong> (${lightest.count}).`;
+  document.getElementById('capsule-verdict').innerHTML=verdict;
+}
+
+// ── FEATURE 3: PACK FOR A TRIP ──
+let tripDays=2, tripOcc='Casual';
+function openTrip(){document.getElementById('trip-overlay').classList.add('open');document.getElementById('trip-sheet').classList.add('open');document.getElementById('trip-result').innerHTML='';}
+function closeTrip(){document.getElementById('trip-overlay').classList.remove('open');document.getElementById('trip-sheet').classList.remove('open');}
+function setTripDays(n,el){tripDays=n;document.querySelectorAll('#trip-days-chips .trip-chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+function setTripOcc(o,el){tripOcc=o;document.querySelectorAll('#trip-occ-chips .trip-chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+
+async function genTrip(){
+  const dest=document.getElementById('trip-dest').value.trim()||'your destination';
+  const tops=clothes.filter(c=>['t-shirt','casual-shirt','formal-shirt','jacket'].includes(c.type));
+  const bots=clothes.filter(c=>['jeans','linen-pants','formal-pants','shorts'].includes(c.type));
+  if(!tops.length||!bots.length){toast('Add more clothes first');return;}
+  const btn=document.getElementById('trip-gen-btn');
+  btn.disabled=true;btn.textContent='Planning…';
+  document.getElementById('trip-result').innerHTML=Array.from({length:tripDays},(_,i)=>`
+    <div class="trip-day">
+      <div class="trip-day-head"><div class="trip-day-num">Day ${i+1}</div></div>
+      <div class="trip-day-body"><div class="skel" style="flex:1;aspect-ratio:1;border-radius:var(--r-md);"></div><div style="width:20px"></div><div class="skel" style="flex:1;aspect-ratio:1;border-radius:var(--r-md);"></div></div>
+    </div>`).join('');
+
+  const tDesc=tops.map(t=>'id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')).join('\n');
+  const bDesc=bots.map(b=>'id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type).join('\n');
+  const tripPrompt='You are an expert mens stylist. The user is packing for '+tripDays+' days in '+dest+'. Occasion: '+tripOcc+'.\nAvailable tops:\n'+tDesc+'\nAvailable bottoms:\n'+bDesc+'\n\nPlan '+tripDays+' non-repeating outfit combinations. Each day use a different top AND different bottom.\nRespond ONLY as valid JSON, no markdown:\n{"days":[{"day":1,"topId":ID,"botId":ID,"tip":"one short practical tip for this day"},...]}'
+
+  try{
+    const res=await callGem(tripPrompt);
+    const p=JSON.parse(res.replace(/```json|```/g,'').trim());
+    document.getElementById('trip-result').innerHTML=`<div style="font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:.75rem;font-weight:400;">Your ${tripDays}-day pack for ${dest}</div>`+
+    p.days.map(d=>{
+      const top=clothes.find(c=>c.id==d.topId)||tops[d.day%tops.length];
+      const bot=clothes.find(c=>c.id==d.botId)||bots[d.day%bots.length];
+      const tEl=top?.src?`<img class="trip-piece-img" src="${top.src}" alt="${top.name}"/>`:`<div class="trip-piece-sw" style="background:${top?.hex||'#ccc'}"></div>`;
+      const bEl=bot?.src?`<img class="trip-piece-img" src="${bot.src}" alt="${bot.name}"/>`:`<div class="trip-piece-sw" style="background:${bot?.hex||'#ccc'}"></div>`;
+      return `<div class="trip-day">
+        <div class="trip-day-head"><div class="trip-day-num">Day ${d.day}</div><div class="trip-day-occ">${tripOcc}</div></div>
+        <div class="trip-day-body">
+          <div class="trip-piece">${tEl}<div class="trip-piece-lbl">${top?.name||''}</div></div>
+          <div class="trip-plus">+</div>
+          <div class="trip-piece">${bEl}<div class="trip-piece-lbl">${bot?.name||''}</div></div>
+        </div>
+        <div class="trip-tip">${d.tip||''}</div>
+      </div>`;
+    }).join('');
+  }catch(e){document.getElementById('trip-result').innerHTML=`<div style="font-size:.82rem;color:var(--text2);">Couldn't plan the trip. Try again.</div>`;}
+  btn.disabled=false;btn.textContent='Plan my outfits ↗';
+}
+
+// ── FEATURE 4: SHOPPING GAP DETECTOR ──
+async function runShopScan(){
+  if(!clothes.length){toast('Add clothes to your wardrobe first');return;}
+  if(!gemKey){toast('Add your Gemini API key in Settings');return;}
+  const btn=document.getElementById('shop-scan-btn');
+  btn.disabled=true;btn.textContent='Analysing…';
+  document.getElementById('shop-result').innerHTML=`<div style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text2);"><span class="spin">↺</span> Checking trends and your wardrobe…</div>`;
+
+  const summary=Object.entries(
+    clothes.reduce((acc,c)=>{acc[c.type]=(acc[c.type]||[]);acc[c.type].push(c.color+' '+c.name);return acc;},{})
+  ).map(([k,v])=>k+': '+v.length+' items ('+v.slice(0,3).join(', ')+(v.length>3?'\u2026':'')+')').join('\n');
+
+  const colors=[...new Set(clothes.map(c=>c.color).filter(Boolean))].slice(0,12).join(', ');
+  const occasions=[...new Set(clothes.map(c=>c.occasion).filter(Boolean))].join(', ');
+
+  try{
+    const res=await callGem(`You are an expert men's fashion stylist and trend analyst based in Kerala, India. Today is ${new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'})}.
+
+The user's current wardrobe:
+${summary}
+
+Color palette: ${colors}
+Occasion coverage: ${occasions}
+
+Analyse this wardrobe against current men's fashion trends in India (2025). Identify the top 5 most impactful gaps — items that are (a) missing or under-represented AND (b) currently trending or highly versatile.
+
+For each gap, explain WHY it matters for his specific wardrobe and what current trend makes it relevant right now.
+
+Respond ONLY as valid JSON, no markdown:
+{"gaps":[{"item":"specific item name","priority":"high|medium|low","why":"2 sentences on why this is missing from HIS wardrobe specifically","trend":"1 sentence on why this is trending right now in India in ${new Date().getFullYear()}"}],"summary":"2 sentence overall assessment of his wardrobe"}`);
+    const p=JSON.parse(res.replace(/```json|```/g,'').trim());
+    document.getElementById('shop-result').innerHTML=
+      `<div style="font-size:.82rem;color:var(--text2);line-height:1.65;margin-bottom:1rem;padding:.85rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);font-weight:300;">${p.summary}</div>`+
+      p.gaps.map(g=>`<div class="gap-card">
+        <div class="gap-priority gap-${g.priority}">${g.priority} priority</div>
+        <div class="gap-item">${g.item}</div>
+        <div class="gap-why">${g.why}</div>
+        <div class="gap-trend">↗ ${g.trend}</div>
+      </div>`).join('');
+  }catch(e){
+    document.getElementById('shop-result').innerHTML=`<div style="font-size:.82rem;color:var(--text2);">Analysis failed. Check your API key and try again.</div>`;
+  }
+  btn.disabled=false;btn.textContent='Analyse my wardrobe ↗';
+}
+
 </script>
 </body>
 </html>
