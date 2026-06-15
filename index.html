@@ -508,16 +508,126 @@ const DEFAULT_LOC={name:'Kayamkulam',lat:9.1833,lon:76.5000};
 let loc=DEFAULT_LOC;
 
 // ── PERSIST ──
-function sv(){try{localStorage.setItem('saya_c',JSON.stringify(clothes));localStorage.setItem('saya_h',JSON.stringify(history));localStorage.setItem('saya_k',gemKey);localStorage.setItem('saya_n',userName);localStorage.setItem('saya_loc',JSON.stringify(loc));}catch(e){}}
-function ld(){try{clothes=JSON.parse(localStorage.getItem('saya_c')||'[]');history=JSON.parse(localStorage.getItem('saya_h')||'[]');gemKey=localStorage.getItem('saya_k')||'';userName=localStorage.getItem('saya_n')||'';const sl=localStorage.getItem('saya_loc');if(sl)loc=JSON.parse(sl);else loc=DEFAULT_LOC;}catch(e){clothes=[];history=[];loc=DEFAULT_LOC;}}
+// ── FIREBASE SETUP ──
+const firebaseConfig = {
+  apiKey: "AIzaSyBa8AwZJ1GTZs-iHOVFItwLqZAxruq1T8Q",
+  authDomain: "saya-408b5.firebaseapp.com",
+  projectId: "saya-408b5",
+  storageBucket: "saya-408b5.firebasestorage.app",
+  messagingSenderId: "414362386278",
+  appId: "1:414362386278:web:3f128440c53f807d1192a7"
+};
+let db = null;
+const USER_ID = 'rayyan';
+
+function loadFirebase(){
+  return new Promise((resolve)=>{
+    if(window.firebase){ initDB(); resolve(); return; }
+    const s1=document.createElement('script');
+    s1.src='https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js';
+    s1.onload=()=>{
+      const s2=document.createElement('script');
+      s2.src='https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js';
+      s2.onload=()=>{ initDB(); resolve(); };
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+  });
+}
+
+function initDB(){
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+}
+
+// ── LOCAL STORAGE for small/sensitive data only ──
+function svLocal(){
+  try{
+    localStorage.setItem('saya_k', gemKey);
+    localStorage.setItem('saya_n', userName);
+    localStorage.setItem('saya_loc', JSON.stringify(loc));
+  }catch(e){}
+}
+function ldLocal(){
+  try{
+    gemKey = localStorage.getItem('saya_k')||'';
+    userName = localStorage.getItem('saya_n')||'';
+    const sl = localStorage.getItem('saya_loc');
+    loc = sl ? JSON.parse(sl) : DEFAULT_LOC;
+  }catch(e){ loc=DEFAULT_LOC; }
+}
+
+// ── FIRESTORE: save single cloth item ──
+async function saveClothFS(item){
+  try{
+    // compress photo before saving
+    if(item.src && item.src.startsWith('data:image')){
+      item.src = await compressImage(item.src, 400, 0.55);
+    }
+    await db.collection('users').doc(USER_ID).collection('clothes').doc(String(item.id)).set(item);
+  }catch(e){ console.error('saveCloth error',e); }
+}
+
+// ── FIRESTORE: delete cloth ──
+async function deleteClothFS(id){
+  try{ await db.collection('users').doc(USER_ID).collection('clothes').doc(String(id)).delete(); }catch(e){}
+}
+
+// ── FIRESTORE: save outfit history entry ──
+async function saveHistoryFS(entry){
+  try{
+    // Don't store full src in history — just hex and names to save space
+    const lean = {...entry, topSrc:null, botSrc:null};
+    await db.collection('users').doc(USER_ID).collection('history').doc(entry.date).set(lean);
+  }catch(e){ console.error('saveHistory error',e); }
+}
+
+// ── FIRESTORE: load all data ──
+async function loadFromFS(){
+  try{
+    const [cSnap, hSnap] = await Promise.all([
+      db.collection('users').doc(USER_ID).collection('clothes').get(),
+      db.collection('users').doc(USER_ID).collection('history').orderBy('date','asc').get()
+    ]);
+    clothes = cSnap.docs.map(d=>d.data());
+    history = hSnap.docs.map(d=>d.data());
+  }catch(e){ console.error('loadFromFS error',e); clothes=[]; history=[]; }
+}
+
+// ── IMAGE COMPRESSION ──
+function compressImage(dataUrl, maxDim, quality){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const scale = Math.min(1, maxDim/Math.max(img.width,img.height));
+      const w = Math.round(img.width*scale);
+      const h = Math.round(img.height*scale);
+      const canvas = document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
+}
+
+// ── LEGACY sv() — only saves local prefs now ──
+function sv(){ svLocal(); }
+function ld(){ ldLocal(); }
 
 // ── BOOT ──
-window.addEventListener('load',()=>{
-  ld();
-  setTimeout(()=>{
-    if(!gemKey||!userName){showScr('onboard');}
-    else{showScr('main');boot();}
-  },1400);
+window.addEventListener('load',async ()=>{
+  ldLocal();
+  await loadFirebase();
+  setTimeout(async ()=>{
+    if(!gemKey||!userName){
+      showScr('onboard');
+    } else {
+      showScr('main');
+      await loadFromFS();
+      boot();
+    }
+  },5000);
 });
 
 function showScr(id){
@@ -532,10 +642,14 @@ function chkOb(){
   document.getElementById('ob-btn').classList.toggle('on',!!(k&&n));
   document.getElementById('ob-btn').disabled=!(k&&n);
 }
-function finishOb(){
+async function finishOb(){
   gemKey=document.getElementById('ob-key').value.trim();
   userName=document.getElementById('ob-name').value.trim();
-  sv();showScr('main');boot();
+  svLocal();
+  showScr('main');
+  await loadFirebase();
+  await loadFromFS();
+  boot();
 }
 
 // ── BOOT ──
@@ -664,7 +778,8 @@ function saveOutfit(o){
   history=history.filter(h=>h.date!==e.date);
   history.push(e);
   if(history.length>90)history=history.slice(-90);
-  sv();renderRecent();renderCalendar();
+  saveHistoryFS(e);
+  renderRecent();renderCalendar();
 }
 
 // ── RECENT ──
@@ -718,7 +833,7 @@ function renderWardrobe(){
   updateFab();
 }
 function setWFilter(f){wFilter=f;renderWardrobe();renderCapsule();}
-function delCloth(id){clothes=clothes.filter(c=>c.id!=id);sv();renderWardrobe();renderDust();toast('Removed');}
+function delCloth(id){deleteClothFS(id);clothes=clothes.filter(c=>c.id!=id);renderWardrobe();renderDust();toast('Removed');}
 
 // ── HISTORY ──
 function renderHistory(){
@@ -779,8 +894,10 @@ async function scanAll(){
       const res=await callGemVision(b64,item.file.type||'image/jpeg',`You are a clothing expert. Analyze this photo. Respond ONLY as valid JSON, no markdown:
 {"name":"descriptive name e.g. Navy Slim Linen Shirt","type":"one of: t-shirt|casual-shirt|formal-shirt|jeans|linen-pants|formal-pants|shorts|jacket","color":"color name","hex":"best hex code","fit":"slim|regular|relaxed|oversized","fabric":"e.g. cotton linen denim","occasion":"casual|formal|smart-casual|versatile","pattern":"solid|striped|checked|printed|other"}`);
       const p=JSON.parse(res.replace(/```json|```/g,'').trim());
-      clothes.push({id:Date.now()+Math.random(),src:item.src,...p});
-      sv();item.status='done';
+      const newItem={id:Date.now()+Math.random(),src:item.src,...p};
+      await saveClothFS(newItem);
+      clothes.push(newItem);
+      item.status='done';
     }catch(e){item.status='err';}
     renderQueue();
     await new Promise(r=>setTimeout(r,350));
@@ -830,7 +947,7 @@ function openSettings(){
   document.getElementById('set-lon').value=loc.lon||'';
 }
 function closeSettings(){document.getElementById('set-overlay').classList.remove('open');document.getElementById('set-sheet').classList.remove('open');}
-function saveSettings(){const k=document.getElementById('set-key').value.trim();if(k){gemKey=k;sv();toast('Key saved');}closeSettings();}
+function saveSettings(){const k=document.getElementById('set-key').value.trim();if(k){gemKey=k;svLocal();toast('Key saved');}closeSettings();}
 function quickLoc(name,lat,lon){
   document.getElementById('set-locname').value=name;
   document.getElementById('set-lat').value=lat;
@@ -841,12 +958,25 @@ function saveLocation(){
   const lat=parseFloat(document.getElementById('set-lat').value);
   const lon=parseFloat(document.getElementById('set-lon').value);
   if(!name||isNaN(lat)||isNaN(lon)){toast('Fill in all location fields');return;}
-  loc={name,lat,lon};sv();
+  loc={name,lat,lon};svLocal();
   closeSettings();
   fetchWeather();
   toast('Location updated to '+name);
 }
-function clearAll(){if(confirm('Clear all data?')){clothes=[];history=[];gemKey='';userName='';localStorage.clear();location.reload();}}
+async function clearAll(){
+  if(!confirm('Clear all wardrobe data?')) return;
+  try{
+    const cSnap=await db.collection('users').doc(USER_ID).collection('clothes').get();
+    const hSnap=await db.collection('users').doc(USER_ID).collection('history').get();
+    const batch=db.batch();
+    cSnap.docs.forEach(d=>batch.delete(d.ref));
+    hSnap.docs.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+  }catch(e){}
+  clothes=[];history=[];gemKey='';userName='';
+  localStorage.clear();
+  location.reload();
+}
 
 // ── TOAST ──
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
@@ -858,7 +988,7 @@ function confirmWore(){
   if(!curOutfit)return;
   // Mark as confirmed wear in history
   const entry=history.find(h=>h.date===todayStr());
-  if(entry){entry.confirmed=true;sv();}
+  if(entry){entry.confirmed=true;saveHistoryFS(entry);}
   btn.textContent='✓  Worn today — saved to history';
   btn.classList.add('confirmed');
   toast('Outfit logged ✓');
