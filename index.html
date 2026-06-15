@@ -276,7 +276,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
       <div class="sec-title">Weather</div>
       <div class="card weather-card" style="margin-bottom:1rem;">
         <div>
-          <div class="w-city">Thiruvananthapuram</div>
+          <div class="w-city">Kayamkulam</div>
           <div class="w-temp" id="w-temp">--°</div>
           <div class="w-desc" id="w-desc">Loading…</div>
         </div>
@@ -434,7 +434,7 @@ function renderGreeting(){
 // ── WEATHER (open-meteo, no key needed) ──
 async function fetchWeather(){
   try{
-    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=8.5241&longitude=76.9366&current=temperature_2m,weathercode&timezone=Asia/Kolkata');
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=9.1833latitude=8.5241&longitude=76.9366longitude=76.5000&current=temperature_2m,weathercode&timezone=Asia/Kolkata');
     const d=await r.json();
     const t=Math.round(d.current.temperature_2m);
     const c=d.current.weathercode;
@@ -481,7 +481,7 @@ Weather: ${wx.temp}°C, ${wx.desc}. Occasion: ${occ}. ${avoidLine}
 
 Tops:\n${tDesc}\nBottoms:\n${bDesc}
 
-Choose the single best complete outfit. Consider color harmony, Kerala heat (${wx.temp}°C), occasion fit, fabric comfort.
+Choose the single best complete outfit. Consider color harmony, Kayamkulam heat (${wx.temp}°C), occasion fit, fabric comfort.
 Respond ONLY as valid JSON, no markdown:
 {"topId":ID,"botId":ID,"tip":"2-sentence practical tip — shoes, tuck, sleeve roll etc.","why":"One sentence on why this color pairing works."}`);
     const p=JSON.parse(res.replace(/```json|```/g,'').trim());
