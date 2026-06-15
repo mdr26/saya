@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Saya"/>
+<meta name="theme-color" content="#F2F0ED"/>
+<title>Saya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:       #F2F0ED;
+  --bg2:      #FFFFFF;
+  --bg3:      #E8E4DC;
+  --border:   #E0DCD4;
+  --border2:  #D0CCC4;
+  --text:     #1A1815;
+  --text2:    #7A7670;
+  --text3:    #B0ACA6;
+  --acc:      #4A7A5A;
+  --acc2:     #3A6A4A;
+  --acc-bg:   #EEF5F1;
+  --acc-text: #2A5A3A;
+  --warn:     #8A6A20;
+  --warn-bg:  #FBF5E6;
+  --warn-br:  #E8D8A0;
+  --r-sm:     8px;
+  --r-md:     10px;
+  --r-lg:     14px;
+  --sans:     'Jost', system-ui, sans-serif;
+  --safe-t:   env(safe-area-inset-top, 44px);
+  --safe-b:   env(safe-area-inset-bottom, 20px);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--sans); font-weight: 300; }
+
+/* ── SCREENS ── */
+.screen { position: fixed; inset: 0; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity .22s; background: var(--bg); }
+.screen.active { opacity: 1; pointer-events: all; }
+
+/* ── LOADING ── */
+#scr-load { align-items: center; justify-content: center; gap: 16px; }
+.load-word { font-size: 2.2rem; font-weight: 200; letter-spacing: .28em; color: var(--text); }
+.load-sub { font-size: .78rem; letter-spacing: .16em; color: var(--text3); font-weight: 300; }
+.load-bar { width: 48px; height: 1px; background: var(--border2); position: relative; overflow: hidden; }
+.load-bar::after { content: ''; position: absolute; inset: 0; background: var(--acc); animation: loadslide 1.4s ease-in-out infinite; }
+@keyframes loadslide { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+
+/* ── ONBOARDING ── */
+#scr-onboard { justify-content: center; padding: 2rem 1.5rem; overflow-y: auto; }
+.ob-mark { font-size: 2.6rem; font-weight: 200; letter-spacing: .28em; color: var(--text); margin-bottom: .25rem; }
+.ob-script { font-size: .8rem; letter-spacing: .04em; color: var(--acc); margin-bottom: 2rem; font-weight: 300; }
+.ob-block { border: 1px solid var(--border); border-radius: var(--r-lg); padding: 1.1rem; margin-bottom: .85rem; background: var(--bg2); }
+.ob-tag { font-size: .65rem; letter-spacing: .12em; text-transform: uppercase; color: var(--acc); margin-bottom: .5rem; font-weight: 400; }
+.ob-desc { font-size: .82rem; color: var(--text2); line-height: 1.55; margin-bottom: .75rem; }
+.ob-desc a { color: var(--acc); text-decoration: none; }
+.ob-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: .7rem .9rem; color: var(--text); font-family: var(--sans); font-size: .88rem; font-weight: 300; outline: none; transition: border-color .15s; }
+.ob-input:focus { border-color: var(--acc); }
+.ob-input::placeholder { color: var(--text3); }
+.btn-go { width: 100%; margin-top: .5rem; padding: .9rem; background: var(--text); color: var(--bg); border: none; border-radius: var(--r-md); font-family: var(--sans); font-size: .88rem; font-weight: 400; letter-spacing: .08em; cursor: pointer; opacity: .3; transition: opacity .15s; }
+.btn-go.on { opacity: 1; }
+
+/* ── SHELL ── */
+#scr-main { overflow: hidden; }
+.topbar { padding: calc(var(--safe-t) + 8px) 1.25rem .7rem; display: flex; align-items: center; justify-content: space-between; background: var(--bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.t-wordmark { font-size: 1.3rem; font-weight: 200; letter-spacing: .22em; color: var(--text); }
+.t-sub { font-size: .6rem; letter-spacing: .1em; color: var(--text3); font-weight: 300; }
+.t-icons { display: flex; gap: 8px; }
+.icon-btn { width: 32px; height: 32px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text2); font-size: 15px; }
+
+.scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1rem 1.25rem 1.5rem; }
+.scroll::-webkit-scrollbar { display: none; }
+
+/* ── BOTTOM NAV ── */
+.bnav { display: flex; background: var(--bg2); border-top: 1px solid var(--border); padding: 6px 0 calc(var(--safe-b) + 4px); flex-shrink: 0; }
+.nv { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 5px 0; }
+.nv-icon { font-size: 18px; color: var(--text3); transition: color .15s; line-height: 1; }
+.nv-label { font-size: .58rem; letter-spacing: .08em; color: var(--text3); font-weight: 400; transition: color .15s; }
+.nv.active .nv-icon, .nv.active .nv-label { color: var(--acc); }
+
+/* ── PAGES ── */
+.page { display: none; }
+.page.vis { display: block; }
+
+/* ── COMMON COMPONENTS ── */
+.sec-title { font-size: .65rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text3); font-weight: 400; margin-bottom: .6rem; }
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.divider { height: 1px; background: var(--border); margin: .75rem 0; }
+
+/* ── TODAY ── */
+.greeting { font-size: 1rem; font-weight: 300; color: var(--text); margin-bottom: 1rem; letter-spacing: .02em; }
+.weather-card { padding: .9rem 1rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.w-temp { font-size: 2rem; font-weight: 200; color: var(--text); line-height: 1; }
+.w-city { font-size: .68rem; letter-spacing: .08em; color: var(--text3); margin-bottom: 2px; }
+.w-desc { font-size: .75rem; color: var(--text2); margin-top: 3px; }
+.w-icon { font-size: 2.2rem; }
+
+.occ-row { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 1rem; padding-bottom: 2px; }
+.occ-row::-webkit-scrollbar { display: none; }
+.occ-chip { flex-shrink: 0; padding: 5px 13px; border: 1px solid var(--border); border-radius: var(--r-md); font-size: .75rem; color: var(--text2); cursor: pointer; background: var(--bg2); font-weight: 300; letter-spacing: .03em; white-space: nowrap; transition: all .13s; }
+.occ-chip.on { background: var(--acc); border-color: var(--acc); color: #fff; font-weight: 400; }
+
+.outfit-card { padding: 1rem; margin-bottom: .75rem; }
+.outfit-top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: .85rem; }
+.outfit-badge { font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--acc-text); background: var(--acc-bg); border: 1px solid #C0DCC8; padding: 3px 9px; border-radius: var(--r-sm); font-weight: 400; }
+.pieces-row { display: flex; gap: 8px; align-items: flex-start; margin-bottom: .85rem; }
+.piece { flex: 1; }
+.piece-img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--r-md); border: 1px solid var(--border); display: block; background: var(--bg3); }
+.piece-swatch { width: 100%; aspect-ratio: 1; border-radius: var(--r-md); border: 1px solid var(--border); background: var(--bg3); }
+.piece-label { font-size: .68rem; color: var(--text2); margin-top: 5px; text-align: center; line-height: 1.3; }
+.piece-plus { display: flex; align-items: center; justify-content: center; padding-top: 28%; color: var(--text3); font-size: 1rem; }
+.ai-tip { font-size: .8rem; color: var(--text2); line-height: 1.65; border-top: 1px solid var(--border); padding-top: .75rem; font-weight: 300; }
+.ai-tip strong { color: var(--text); font-weight: 400; }
+.ai-why { color: var(--acc-text); }
+
+.regen-btn { width: 100%; padding: .75rem; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r-md); font-family: var(--sans); font-size: .78rem; font-weight: 400; letter-spacing: .08em; color: var(--text2); cursor: pointer; margin-bottom: 1rem; transition: background .13s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.regen-btn:active { background: var(--bg3); }
+.regen-icon { font-size: 12px; }
+
+.dust-card { background: var(--warn-bg); border: 1px solid var(--warn-br); border-radius: var(--r-lg); padding: .85rem 1rem; margin-bottom: 1rem; }
+.dust-title { font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--warn); font-weight: 400; margin-bottom: .5rem; }
+.dust-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.dust-scroll::-webkit-scrollbar { display: none; }
+.dust-chip { flex-shrink: 0; font-size: .72rem; background: var(--bg2); border: 1px solid var(--warn-br); color: var(--warn); padding: 3px 10px; border-radius: var(--r-sm); font-weight: 300; }
+
+.recent-item { display: flex; align-items: center; gap: .75rem; padding: .75rem 0; border-bottom: 1px solid var(--border); }
+.recent-item:last-child { border-bottom: none; }
+.recent-thumbs { display: flex; gap: 4px; }
+.r-thumb { width: 40px; height: 40px; border-radius: var(--r-sm); object-fit: cover; border: 1px solid var(--border); background: var(--bg3); }
+.r-thumb-sw { width: 40px; height: 40px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--bg3); }
+.recent-info { flex: 1; }
+.recent-names { font-size: .8rem; color: var(--text); font-weight: 400; margin-bottom: 2px; }
+.recent-meta { font-size: .7rem; color: var(--text3); font-weight: 300; }
+
+.empty-card { text-align: center; padding: 2.5rem 1rem; }
+.empty-icon { font-size: 2rem; opacity: .25; margin-bottom: .75rem; }
+.empty-text { font-size: .85rem; color: var(--text2); line-height: 1.55; }
+
+/* ── WARDROBE ── */
+.stats-row { display: flex; gap: 8px; margin-bottom: 1rem; }
+.stat-box { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r-lg); padding: .75rem .85rem; }
+.stat-n { font-size: 1.5rem; font-weight: 200; color: var(--text); line-height: 1; }
+.stat-l { font-size: .65rem; letter-spacing: .06em; color: var(--text3); margin-top: 2px; font-weight: 300; }
+
+.filter-row { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 1rem; padding-bottom: 2px; }
+.filter-row::-webkit-scrollbar { display: none; }
+.f-chip { flex-shrink: 0; padding: 4px 12px; border: 1px solid var(--border); border-radius: var(--r-sm); font-size: .72rem; color: var(--text2); cursor: pointer; background: var(--bg2); white-space: nowrap; font-weight: 300; letter-spacing: .02em; }
+.f-chip.on { background: var(--text); border-color: var(--text); color: var(--bg); }
+
+.w-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4rem; }
+.w-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; cursor: pointer; position: relative; }
+.w-card-img { width: 100%; aspect-ratio: .88; object-fit: cover; display: block; background: var(--bg3); }
+.w-card-sw { width: 100%; aspect-ratio: .88; display: block; }
+.w-card-info { padding: 7px 8px 8px; }
+.w-card-name { font-size: .68rem; font-weight: 400; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 1px; }
+.w-card-meta { font-size: .6rem; color: var(--text3); font-weight: 300; }
+.w-del { position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; background: rgba(26,24,21,.55); border: none; border-radius: 4px; color: #fff; font-size: 10px; cursor: pointer; display: none; align-items: center; justify-content: center; }
+.w-card:hover .w-del, .w-card:active .w-del { display: flex; }
+.dust-dot { position: absolute; top: 6px; left: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--warn); }
+
+.fab { position: fixed; bottom: calc(var(--safe-b) + 62px); right: 1.25rem; width: 46px; height: 46px; background: var(--text); border: none; border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 50; color: var(--bg); font-size: 22px; display: none; }
+
+/* ── HISTORY ── */
+.cal-row { display: flex; gap: 5px; overflow-x: auto; margin-bottom: 1rem; padding-bottom: 2px; }
+.cal-row::-webkit-scrollbar { display: none; }
+.cal-day { flex-shrink: 0; width: 42px; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 0; border-radius: var(--r-md); border: 1px solid transparent; cursor: pointer; }
+.cal-day.has { border-color: var(--border); background: var(--bg2); }
+.cal-day.today { border-color: var(--acc); background: var(--acc-bg); }
+.cal-dn { font-size: .58rem; letter-spacing: .06em; color: var(--text3); font-weight: 300; }
+.cal-dd { font-size: .88rem; font-weight: 300; color: var(--text2); }
+.cal-day.today .cal-dd { color: var(--acc); font-weight: 400; }
+.cal-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--acc); }
+
+.hist-item { display: flex; align-items: center; gap: .75rem; padding: .8rem 0; border-bottom: 1px solid var(--border); }
+.hist-item:last-child { border-bottom: none; }
+.hist-date { font-size: .65rem; color: var(--text3); font-weight: 300; width: 52px; flex-shrink: 0; }
+.hist-thumbs { display: flex; gap: 4px; }
+.hist-info { flex: 1; }
+.hist-names { font-size: .8rem; color: var(--text); font-weight: 400; margin-bottom: 2px; }
+.hist-occ { font-size: .68rem; color: var(--text3); font-weight: 300; }
+
+/* ── UPLOAD SHEET ── */
+.overlay { position: fixed; inset: 0; background: rgba(26,24,21,.4); z-index: 100; opacity: 0; pointer-events: none; transition: opacity .22s; }
+.overlay.open { opacity: 1; pointer-events: all; }
+.sheet { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); border-radius: 16px 16px 0 0; z-index: 101; padding: 1.1rem 1.25rem; padding-bottom: calc(var(--safe-b) + 1.1rem); transform: translateY(100%); transition: transform .28s cubic-bezier(.32,.72,0,1); }
+.sheet.open { transform: translateY(0); }
+.sheet-handle { width: 32px; height: 3px; background: var(--border2); border-radius: 2px; margin: 0 auto 1rem; }
+.sheet-title { font-size: .9rem; font-weight: 400; letter-spacing: .04em; color: var(--text); margin-bottom: .3rem; }
+.sheet-sub { font-size: .78rem; color: var(--text2); margin-bottom: 1rem; line-height: 1.5; font-weight: 300; }
+.upload-zone { border: 1px dashed var(--border2); border-radius: var(--r-lg); padding: 1.75rem 1rem; text-align: center; cursor: pointer; margin-bottom: .85rem; transition: background .13s; }
+.upload-zone:active { background: var(--bg3); }
+.upload-zone p { font-size: .82rem; color: var(--text2); font-weight: 300; margin-top: .5rem; }
+.upload-zone input { display: none; }
+.q-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: .85rem; }
+.q-item { position: relative; border-radius: var(--r-sm); overflow: hidden; aspect-ratio: 1; }
+.q-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.q-over { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .6rem; font-weight: 500; text-align: center; }
+.q-pending { background: rgba(26,24,21,.35); color: #fff; }
+.q-scanning { background: rgba(74,122,90,.75); color: #fff; }
+.q-done { background: rgba(74,122,90,.85); color: #fff; }
+.q-err { background: rgba(180,60,60,.7); color: #fff; }
+.scan-btn { width: 100%; padding: .82rem; background: var(--text); color: var(--bg); border: none; border-radius: var(--r-md); font-family: var(--sans); font-size: .85rem; font-weight: 400; letter-spacing: .08em; cursor: pointer; transition: opacity .15s; }
+.scan-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+/* ── SETTINGS SHEET ── */
+.settings-row { display: flex; align-items: center; justify-content: space-between; padding: .8rem 0; border-bottom: 1px solid var(--border); }
+.settings-row:last-child { border-bottom: none; }
+.set-label { font-size: .82rem; color: var(--text); font-weight: 300; }
+.set-sub { font-size: .7rem; color: var(--text3); margin-top: 1px; }
+.set-input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--r-md); padding: .65rem .85rem; color: var(--text); font-family: var(--sans); font-size: .82rem; font-weight: 300; outline: none; margin-top: .5rem; transition: border-color .13s; }
+.set-input:focus { border-color: var(--acc); }
+.btn-save { padding: .7rem 1.25rem; background: var(--text); color: var(--bg); border: none; border-radius: var(--r-md); font-family: var(--sans); font-size: .8rem; font-weight: 400; letter-spacing: .06em; cursor: pointer; margin-top: .65rem; }
+.btn-danger { padding: .7rem 1.25rem; background: var(--bg); color: #A04040; border: 1px solid #E0C0C0; border-radius: var(--r-md); font-family: var(--sans); font-size: .8rem; font-weight: 300; cursor: pointer; margin-top: .5rem; width: 100%; }
+
+/* ── SKELETON ── */
+.skel { background: var(--bg3); border-radius: var(--r-md); }
+@keyframes sk { 0%,100%{opacity:.5} 50%{opacity:1} }
+.skel { animation: sk 1.2s ease-in-out infinite; }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: calc(var(--safe-b) + 74px); left: 50%; transform: translateX(-50%) translateY(10px); background: var(--text); color: var(--bg); border-radius: var(--r-md); padding: .5rem 1.1rem; font-size: .78rem; font-weight: 300; letter-spacing: .04em; opacity: 0; transition: all .25s; z-index: 200; white-space: nowrap; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.spin { display: inline-block; animation: spinr 1s linear infinite; }
+@keyframes spinr { to { transform: rotate(360deg); } }
+
+/* ── WORE THIS ── */
+.wore-btn { width:100%; padding:.65rem; background:var(--acc-bg); border:1px solid #C0DCC8; border-radius:var(--r-md); font-family:var(--sans); font-size:.78rem; font-weight:400; letter-spacing:.06em; color:var(--acc-text); cursor:pointer; margin-bottom:.75rem; display:flex; align-items:center; justify-content:center; gap:6px; transition:background .13s; }
+.wore-btn:active { background:#D8EDE0; }
+.wore-btn.confirmed { background:var(--acc); color:#fff; border-color:var(--acc); pointer-events:none; }
+
+/* ── CAPSULE SCORE ── */
+.capsule-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); padding:1rem; margin-bottom:1rem; }
+.capsule-title { font-size:.72rem; font-weight:400; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); margin-bottom:.85rem; }
+.cap-row { display:flex; align-items:center; gap:.75rem; margin-bottom:.6rem; }
+.cap-label { font-size:.75rem; color:var(--text2); width:90px; flex-shrink:0; font-weight:300; }
+.cap-bar-bg { flex:1; height:5px; background:var(--bg3); border-radius:3px; overflow:hidden; }
+.cap-bar-fill { height:100%; border-radius:3px; background:var(--acc); transition:width .6s ease; }
+.cap-bar-fill.warn { background:var(--warn); }
+.cap-count { font-size:.72rem; color:var(--text3); width:28px; text-align:right; font-weight:300; }
+.cap-verdict { font-size:.8rem; color:var(--text2); line-height:1.6; border-top:1px solid var(--border); padding-top:.75rem; margin-top:.35rem; font-weight:300; }
+.cap-verdict strong { color:var(--text); font-weight:400; }
+
+/* ── PACK TRIP ── */
+.trip-sheet-inner { max-height:82vh; overflow-y:auto; }
+.trip-sheet-inner::-webkit-scrollbar { display:none; }
+.trip-field { margin-bottom:.85rem; }
+.trip-label { font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); font-weight:400; margin-bottom:.45rem; }
+.trip-input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:var(--r-md); padding:.65rem .85rem; color:var(--text); font-family:var(--sans); font-size:.85rem; font-weight:300; outline:none; transition:border-color .13s; }
+.trip-input:focus { border-color:var(--acc); }
+.trip-chips { display:flex; gap:6px; flex-wrap:wrap; }
+.trip-chip { padding:5px 13px; border:1px solid var(--border); border-radius:var(--r-md); font-size:.75rem; color:var(--text2); cursor:pointer; background:var(--bg2); font-weight:300; white-space:nowrap; }
+.trip-chip.on { background:var(--text); border-color:var(--text); color:var(--bg); }
+.trip-result { margin-top:.85rem; }
+.trip-day { border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; margin-bottom:.75rem; }
+.trip-day-head { background:var(--bg3); padding:.6rem .9rem; display:flex; align-items:center; justify-content:space-between; }
+.trip-day-num { font-size:.72rem; font-weight:400; letter-spacing:.08em; color:var(--text); }
+.trip-day-occ { font-size:.65rem; color:var(--text2); font-weight:300; }
+.trip-day-body { padding:.85rem; display:flex; gap:8px; align-items:flex-start; }
+.trip-piece { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; }
+.trip-piece-img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:var(--r-md); border:1px solid var(--border); background:var(--bg3); }
+.trip-piece-sw { width:100%; aspect-ratio:1; border-radius:var(--r-md); border:1px solid var(--border); }
+.trip-piece-lbl { font-size:.62rem; color:var(--text2); text-align:center; line-height:1.3; }
+.trip-plus { display:flex; align-items:center; justify-content:center; padding-top:25%; color:var(--text3); }
+.trip-tip { font-size:.75rem; color:var(--text2); line-height:1.55; border-top:1px solid var(--border); padding:.65rem .85rem; font-weight:300; }
+
+/* ── SHOPPING GAP ── */
+.pg-shop { }
+.shop-scan-btn { width:100%; padding:.85rem; background:var(--text); color:var(--bg); border:none; border-radius:var(--r-md); font-family:var(--sans); font-size:.85rem; font-weight:400; letter-spacing:.08em; cursor:pointer; margin-bottom:1rem; }
+.shop-scan-btn:disabled { opacity:.3; cursor:not-allowed; }
+.gap-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); padding:1rem; margin-bottom:.75rem; }
+.gap-priority { display:inline-block; font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; padding:3px 8px; border-radius:var(--r-sm); font-weight:400; margin-bottom:.6rem; }
+.gap-high { background:#FCEBEB; color:#7A2020; border:1px solid #EEC8C8; }
+.gap-med { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn-br); }
+.gap-low { background:var(--acc-bg); color:var(--acc-text); border:1px solid #C0DCC8; }
+.gap-item { font-size:.9rem; font-weight:400; color:var(--text); margin-bottom:.35rem; }
+.gap-why { font-size:.8rem; color:var(--text2); line-height:1.55; font-weight:300; }
+.gap-trend { font-size:.75rem; color:var(--acc-text); margin-top:.4rem; font-weight:300; font-style:italic; }
+.shop-intro { font-size:.82rem; color:var(--text2); line-height:1.6; margin-bottom:1rem; font-weight:300; }
+
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="screen active" id="scr-load">
+  <div class="load-word">S A Y A</div>
+  <div class="load-bar"></div>
+  <div class="load-sub">your silhouette</div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="screen" id="scr-onboard">
+  <div class="ob-mark">S A Y A</div>
+  <div class="ob-script">سایه · Your silhouette before you speak</div>
+
+  <div class="ob-block">
+    <div class="ob-tag">Step 1 — Gemini API key</div>
+    <div class="ob-desc">Go to <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → Get API key → Create → paste below. Free, takes 2 minutes.</div>
+    <input class="ob-input" type="password" id="ob-key" placeholder="Paste your Gemini API key…" oninput="chkOb()"/>
+  </div>
+
+  <div class="ob-block">
+    <div class="ob-tag">Step 2 — Your name</div>
+    <input class="ob-input" type="text" id="ob-name" placeholder="Your name…" oninput="chkOb()"/>
+  </div>
+
+  <button class="btn-go" id="ob-btn" onclick="finishOb()" disabled>Enter Saya →</button>
+</div>
+
+<!-- MAIN -->
+<div class="screen" id="scr-main">
+  <div class="topbar">
+    <div>
+      <div class="t-wordmark">S A Y A</div>
+      <div class="t-sub">سایه</div>
+    </div>
+    <div class="t-icons">
+      <div class="icon-btn" onclick="openSettings()" title="Settings">⚙</div>
+    </div>
+  </div>
+
+  <div class="scroll">
+    <!-- TODAY -->
+    <div class="page vis" id="pg-today">
+      <div class="greeting" id="greeting"></div>
+
+      <div class="sec-title">Weather</div>
+      <div class="card weather-card" style="margin-bottom:1rem;">
+        <div>
+          <div class="w-city" id="w-city">Kayamkulam</div>
+          <div class="w-temp" id="w-temp">--°</div>
+          <div class="w-desc" id="w-desc">Loading…</div>
+        </div>
+        <div class="w-icon" id="w-icon">·</div>
+      </div>
+
+      <div class="sec-title">Occasion</div>
+      <div class="occ-row" id="occ-row">
+        <div class="occ-chip on" onclick="setOcc('Casual',this)">Casual</div>
+        <div class="occ-chip" onclick="setOcc('Office',this)">Office</div>
+        <div class="occ-chip" onclick="setOcc('Smart casual',this)">Smart casual</div>
+        <div class="occ-chip" onclick="setOcc('Formal',this)">Formal</div>
+        <div class="occ-chip" onclick="setOcc('Evening out',this)">Evening out</div>
+        <div class="occ-chip" onclick="setOcc('Wedding / Function',this)">Wedding / Function</div>
+      </div>
+
+      <div class="sec-title">Today's outfit</div>
+      <div id="outfit-area"></div>
+      <button class="wore-btn" id="wore-btn" onclick="confirmWore()">✓ &nbsp;I wore this today</button>
+      <button class="regen-btn" id="regen-btn" onclick="genOutfit()">
+        <span class="regen-icon">↺</span> Try another combination
+      </button>
+
+      <button class="regen-btn" onclick="openTrip()" style="margin-bottom:1rem;">
+        <span>✈</span> Pack for a trip
+      </button>
+      <div id="dust-area"></div>
+
+      <div class="sec-title" style="margin-top:.25rem;">Recent outfits</div>
+      <div class="card" style="padding:.25rem .85rem;" id="recent-area"></div>
+    </div>
+
+    <!-- WARDROBE -->
+    <div class="page" id="pg-wardrobe">
+      <div class="stats-row" id="w-stats"></div>
+      <div class="capsule-card" id="capsule-card" style="display:none;">
+        <div class="capsule-title">Wardrobe balance</div>
+        <div id="capsule-bars"></div>
+        <div class="cap-verdict" id="capsule-verdict"></div>
+      </div>
+      <div class="filter-row" id="w-filters"></div>
+      <div class="w-grid" id="w-grid"></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="page" id="pg-history">
+      <div class="sec-title">This week</div>
+      <div class="cal-row" id="cal-row"></div>
+      <div class="sec-title">All outfits</div>
+      <div class="card" style="padding:.25rem .85rem;" id="hist-list"></div>
+    </div>
+
+    <!-- SHOP PAGE -->
+    <div class="page pg-shop" id="pg-shop">
+      <div class="shop-intro">Saya analyses your wardrobe and checks current fashion trends to tell you exactly what's missing and why it matters right now.</div>
+      <button class="shop-scan-btn" id="shop-scan-btn" onclick="runShopScan()">Analyse my wardrobe ↗</button>
+      <div id="shop-result"></div>
+    </div>
+  </div>
+
+  <nav class="bnav">
+    <div class="nv active" onclick="navTo('today',this)">
+      <div class="nv-icon">◎</div>
+      <div class="nv-label">TODAY</div>
+    </div>
+    <div class="nv" onclick="navTo('wardrobe',this)">
+      <div class="nv-icon">▦</div>
+      <div class="nv-label">WARDROBE</div>
+    </div>
+    <div class="nv" onclick="navTo('history',this)">
+      <div class="nv-icon">◷</div>
+      <div class="nv-label">HISTORY</div>
+    </div>
+    <div class="nv" onclick="navTo('shop',this)">
+      <div class="nv-icon">◈</div>
+      <div class="nv-label">SHOP</div>
+    </div>
+  </nav>
+
+  <button class="fab" id="fab" onclick="openUpload()" aria-label="Add clothes">＋</button>
+</div>
+
+<!-- UPLOAD SHEET -->
+<div class="overlay" id="up-overlay" onclick="closeUpload()"></div>
+<div class="sheet" id="up-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Add clothes</div>
+  <div class="sheet-sub">Lay each item flat on a light surface. One item per photo — AI identifies type, color, fit, and fabric automatically.</div>
+  <div class="upload-zone" onclick="document.getElementById('photo-in').click()">
+    <div style="font-size:1.5rem;color:var(--text3);">↑</div>
+    <p>Tap to select photos from your camera roll</p>
+    <input type="file" id="photo-in" accept="image/*" multiple onchange="addPhotos(event)"/>
+  </div>
+  <div class="q-grid" id="q-grid"></div>
+  <button class="scan-btn" id="scan-btn" onclick="scanAll()" disabled>Scan with AI</button>
+</div>
+
+<!-- TRIP SHEET -->
+<div class="overlay" id="trip-overlay" onclick="closeTrip()"></div>
+<div class="sheet" id="trip-sheet">
+  <div class="trip-sheet-inner">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Pack for a trip</div>
+    <div class="sheet-sub">Tell Saya where you're going and for how long — it'll plan non-repeating outfits from your wardrobe.</div>
+    <div class="trip-field">
+      <div class="trip-label">Destination</div>
+      <input class="trip-input" id="trip-dest" placeholder="e.g. Wagamon, Munnar, Kochi…"/>
+    </div>
+    <div class="trip-field">
+      <div class="trip-label">Number of days</div>
+      <div class="trip-chips" id="trip-days-chips">
+        <div class="trip-chip on" onclick="setTripDays(2,this)">2 days</div>
+        <div class="trip-chip" onclick="setTripDays(3,this)">3 days</div>
+        <div class="trip-chip" onclick="setTripDays(4,this)">4 days</div>
+        <div class="trip-chip" onclick="setTripDays(5,this)">5 days</div>
+        <div class="trip-chip" onclick="setTripDays(7,this)">1 week</div>
+      </div>
+    </div>
+    <div class="trip-field">
+      <div class="trip-label">Vibe</div>
+      <div class="trip-chips" id="trip-occ-chips">
+        <div class="trip-chip on" onclick="setTripOcc('Casual',this)">Casual</div>
+        <div class="trip-chip" onclick="setTripOcc('Smart casual',this)">Smart casual</div>
+        <div class="trip-chip" onclick="setTripOcc('Formal',this)">Formal</div>
+        <div class="trip-chip" onclick="setTripOcc('Mixed',this)">Mixed</div>
+      </div>
+    </div>
+    <button class="scan-btn" id="trip-gen-btn" onclick="genTrip()">Plan my outfits ↗</button>
+    <div class="trip-result" id="trip-result"></div>
+  </div>
+</div>
+
+<!-- SETTINGS SHEET -->
+<div class="overlay" id="set-overlay" onclick="closeSettings()"></div>
+<div class="sheet" id="set-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Settings</div>
+  <div style="margin-top:.75rem;">
+    <div class="set-label">Gemini API key</div>
+    <div class="set-sub">Used only on your device</div>
+    <input class="set-input" type="password" id="set-key" placeholder="Paste new key to update…"/>
+    <div style="display:flex;gap:8px;margin-top:.65rem;">
+      <button class="btn-save" onclick="saveSettings()">Save</button>
+      <button class="btn-save" onclick="testKey()" style="background:var(--acc);flex:1;">Test key ↗</button>
+    </div>
+    <div id="key-test-result" style="font-size:.75rem;margin-top:.6rem;line-height:1.5;display:none;padding:.6rem .8rem;border-radius:var(--r-md);border:1px solid var(--border);"></div>
+    <div class="divider" style="margin-top:1rem;"></div>
+    <button class="btn-danger" onclick="clearAll()">Clear all data and start over</button>
+    <div class="divider" style="margin-top:1rem;"></div>
+    <div class="set-label">Location</div>
+    <div class="set-sub">Change when you travel. Weather updates instantly.</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;margin-bottom:8px;">
+      <button onclick="quickLoc('Kayamkulam',9.1833,76.5000)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Kayamkulam</button>
+      <button onclick="quickLoc('Kochi',9.9312,76.2673)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Kochi</button>
+      <button onclick="quickLoc('Wagamon',9.6888,76.9029)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Wagamon</button>
+      <button onclick="quickLoc('Munnar',10.0889,77.0595)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Munnar</button>
+      <button onclick="quickLoc('Alleppey',9.4981,76.3388)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Alleppey</button>
+      <button onclick="quickLoc('Kozhikode',11.2588,75.7804)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Kozhikode</button>
+      <button onclick="quickLoc('Thrissur',10.5276,76.2144)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Thrissur</button>
+      <button onclick="quickLoc('Trivandrum',8.5241,76.9366)" style="padding:4px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--bg);font-family:var(--sans);font-size:.72rem;color:var(--text2);cursor:pointer;font-weight:300;">Trivandrum</button>
+    </div>
+    <input class="set-input" type="text" id="set-locname" placeholder="Or type any city name…"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+      <input class="set-input" type="number" id="set-lat" placeholder="Latitude" step="0.0001" style="margin-top:0;"/>
+      <input class="set-input" type="number" id="set-lon" placeholder="Longitude" step="0.0001" style="margin-top:0;"/>
+    </div>
+    <div style="font-size:.68rem;color:var(--text3);margin-top:6px;font-weight:300;">Tip: Search "<span style="font-style:italic;">Wagamon coordinates</span>" on Google to get lat/lon.</div>
+    <button class="btn-save" onclick="saveLocation()" style="margin-top:.65rem;">Update location</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+let clothes=[], history=[], gemKey='', userName='', occ='Casual', curOutfit=null, queue=[], scanning=false, wFilter='all';
+let _memKey=''; // in-memory fallback for Safari PWA
+const DEFAULT_LOC={name:'Kayamkulam',lat:9.1833,lon:76.5000};
+let loc=DEFAULT_LOC;
+
+// ── PERSIST ──
+// ── FIREBASE SETUP ──
+const firebaseConfig = {
+  apiKey: "AIzaSyBa8AwZJ1GTZs-iHOVFItwLqZAxruq1T8Q",
+  authDomain: "saya-408b5.firebaseapp.com",
+  projectId: "saya-408b5",
+  storageBucket: "saya-408b5.firebasestorage.app",
+  messagingSenderId: "414362386278",
+  appId: "1:414362386278:web:3f128440c53f807d1192a7"
+};
+let db = null;
+const USER_ID = 'rayyan';
+
+function loadFirebase(){
+  return new Promise((resolve)=>{
+    if(window.firebase){ initDB(); resolve(); return; }
+    const s1=document.createElement('script');
+    s1.src='https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js';
+    s1.onload=()=>{
+      const s2=document.createElement('script');
+      s2.src='https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js';
+      s2.onload=()=>{ initDB(); resolve(); };
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s1);
+  });
+}
+
+function initDB(){
+  if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+}
+
+// ── LOCAL STORAGE for small/sensitive data only ──
+function svLocal(){
+  _memKey = gemKey; // always save to memory
+  try{
+    localStorage.setItem('saya_k', gemKey);
+    localStorage.setItem('saya_n', userName);
+    localStorage.setItem('saya_loc', JSON.stringify(loc));
+  }catch(e){ console.warn('localStorage unavailable, using memory only'); }
+}
+function ldLocal(){
+  try{
+    gemKey = _memKey || localStorage.getItem('saya_k')||'';
+    userName = localStorage.getItem('saya_n')||'';
+    const sl = localStorage.getItem('saya_loc');
+    loc = sl ? JSON.parse(sl) : DEFAULT_LOC;
+  }catch(e){ gemKey=_memKey||''; loc=DEFAULT_LOC; }
+}
+
+// ── FIRESTORE: save single cloth item ──
+async function saveClothFS(item){
+  try{
+    // compress photo before saving
+    if(item.src && item.src.startsWith('data:image')){
+      item.src = await compressImage(item.src, 400, 0.55);
+    }
+    await db.collection('users').doc(USER_ID).collection('clothes').doc(String(item.id)).set(item);
+  }catch(e){ console.error('saveCloth error',e); }
+}
+
+// ── FIRESTORE: delete cloth ──
+async function deleteClothFS(id){
+  try{ await db.collection('users').doc(USER_ID).collection('clothes').doc(String(id)).delete(); }catch(e){}
+}
+
+// ── FIRESTORE: save outfit history entry ──
+async function saveHistoryFS(entry){
+  try{
+    // Don't store full src in history — just hex and names to save space
+    const lean = {...entry, topSrc:null, botSrc:null};
+    await db.collection('users').doc(USER_ID).collection('history').doc(entry.date).set(lean);
+  }catch(e){ console.error('saveHistory error',e); }
+}
+
+// ── FIRESTORE: load all data ──
+async function loadFromFS(){
+  try{
+    const [cSnap, hSnap] = await Promise.all([
+      db.collection('users').doc(USER_ID).collection('clothes').get(),
+      db.collection('users').doc(USER_ID).collection('history').orderBy('date','asc').get()
+    ]);
+    clothes = cSnap.docs.map(d=>d.data());
+    history = hSnap.docs.map(d=>d.data());
+  }catch(e){ console.error('loadFromFS error',e); clothes=[]; history=[]; }
+}
+
+// ── IMAGE COMPRESSION ──
+function compressImage(dataUrl, maxDim, quality){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const scale = Math.min(1, maxDim/Math.max(img.width,img.height));
+      const w = Math.round(img.width*scale);
+      const h = Math.round(img.height*scale);
+      const canvas = document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
+}
+
+// ── LEGACY sv() — only saves local prefs now ──
+function sv(){ svLocal(); }
+function ld(){ ldLocal(); }
+
+// ── BOOT ──
+window.addEventListener('load',async ()=>{
+  ldLocal();
+  await loadFirebase();
+  setTimeout(async ()=>{
+    if(!gemKey||!userName){
+      showScr('onboard');
+    } else {
+      showScr('main');
+      await loadFromFS();
+      boot();
+    }
+  },5000);
+});
+
+function showScr(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('scr-'+id).classList.add('active');
+}
+
+// ── ONBOARD ──
+function chkOb(){
+  const k=document.getElementById('ob-key').value.trim();
+  const n=document.getElementById('ob-name').value.trim();
+  document.getElementById('ob-btn').classList.toggle('on',!!(k&&n));
+  document.getElementById('ob-btn').disabled=!(k&&n);
+}
+async function finishOb(){
+  gemKey=document.getElementById('ob-key').value.trim();
+  userName=document.getElementById('ob-name').value.trim();
+  svLocal();
+  showScr('main');
+  await loadFirebase();
+  await loadFromFS();
+  boot();
+}
+
+// ── BOOT ──
+function boot(){
+  renderGreeting();
+  fetchWeather();
+  renderWardrobe();
+  renderHistory();
+  renderCalendar();
+  renderDust();
+  renderRecent();
+  if(clothes.filter(c=>iTop(c)).length&&clothes.filter(c=>iBot(c)).length) genOutfit();
+  else renderEmptyOutfit();
+}
+
+function iTop(c){return ['t-shirt','casual-shirt','formal-shirt','jacket'].includes(c.type);}
+function iBot(c){return ['jeans','linen-pants','formal-pants','shorts'].includes(c.type);}
+function todayStr(){return new Date().toISOString().split('T')[0];}
+function fmtDate(ds){const d=new Date(ds+'T00:00:00');return d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});}
+
+// ── GREETING ──
+function renderGreeting(){
+  const h=new Date().getHours();
+  const g=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  document.getElementById('greeting').textContent=`${g}, ${userName}.`;
+}
+
+// ── WEATHER (open-meteo, no key needed) ──
+async function fetchWeather(){
+  document.getElementById('w-city').textContent=loc.name;
+  try{
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,weathercode&timezone=Asia/Kolkata`);
+    const d=await r.json();
+    const t=Math.round(d.current.temperature_2m);
+    const c=d.current.weathercode;
+    document.getElementById('w-temp').textContent=t+'°C';
+    document.getElementById('w-desc').textContent=wDesc(c);
+    document.getElementById('w-icon').textContent=wIcon(c);
+    window._wx={temp:t,desc:wDesc(c)};
+  }catch(e){
+    document.getElementById('w-temp').textContent='32°C';
+    document.getElementById('w-desc').textContent='Hot and humid';
+    document.getElementById('w-icon').textContent='☀️';
+    window._wx={temp:32,desc:'hot and humid'};
+  }
+}
+function wIcon(c){if(c===0)return'☀️';if(c<=2)return'⛅';if(c<=49)return'🌫️';if(c<=69)return'🌧️';return'⛈️';}
+function wDesc(c){if(c===0)return'Clear sky';if(c<=2)return'Partly cloudy';if(c<=49)return'Foggy';if(c<=69)return'Rainy';return'Thunderstorm';}
+
+// ── OCCASION ──
+function setOcc(o,el){
+  occ=o;
+  document.querySelectorAll('.occ-chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  genOutfit();
+}
+
+// ── OUTFIT GENERATION ──
+async function genOutfit(){
+  const tops=clothes.filter(iTop), bots=clothes.filter(iBot);
+  if(!tops.length||!bots.length){renderEmptyOutfit();return;}
+  if(!gemKey){pickRandom(tops,bots);return;}
+
+  document.getElementById('outfit-area').innerHTML=`<div class="card" style="padding:1rem;margin-bottom:.75rem;"><div class="skel" style="height:14px;width:60%;margin-bottom:.85rem;"></div><div style="display:flex;gap:8px;margin-bottom:.85rem;"><div class="skel" style="flex:1;aspect-ratio:1;border-radius:var(--r-md);"></div><div style="width:20px;"></div><div class="skel" style="flex:1;aspect-ratio:1;border-radius:var(--r-md);"></div></div><div class="skel" style="height:10px;width:100%;margin-bottom:6px;"></div><div class="skel" style="height:10px;width:75%;"></div></div>`;
+  document.getElementById('regen-btn').disabled=true;
+
+  const wx=window._wx||{temp:32,desc:'hot and humid'};
+  const last=history.length?history[history.length-1]:null;
+  const avoidLine=last?`Avoid repeating: top id ${last.topId}, bottom id ${last.botId}.`:'';
+  const tDesc=tops.map((t,i)=>i+'|id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')+'|'+(t.pattern||'solid')).join('\n');
+  const bDesc=bots.map((b,i)=>i+'|id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type+'|'+(b.fit||'regular')).join('\n');
+
+  try{
+    const res=await callGem(`You are an expert men's stylist based in Kerala, India.
+Weather: ${wx.temp}°C, ${wx.desc}. Occasion: ${occ}. ${avoidLine}
+
+Tops:\n${tDesc}\nBottoms:\n${bDesc}
+
+Choose the single best complete outfit. Consider color harmony, ${loc.name} heat (${wx.temp}°C), occasion fit, fabric comfort.
+Respond ONLY as valid JSON, no markdown:
+{"topId":ID,"botId":ID,"tip":"2-sentence practical tip — shoes, tuck, sleeve roll etc.","why":"One sentence on why this color pairing works."}`);
+    const p=JSON.parse(res.replace(/```json|```/g,'').trim());
+    const top=clothes.find(c=>c.id==p.topId)||tops[0];
+    const bot=clothes.find(c=>c.id==p.botId)||bots[0];
+    curOutfit={top,bot,tip:p.tip,why:p.why,occ,date:todayStr()};
+    renderOutfit(curOutfit);
+    saveOutfit(curOutfit);
+  }catch(e){pickRandom(tops,bots);}
+  document.getElementById('regen-btn').disabled=false;
+}
+
+function pickRandom(tops,bots){
+  const top=tops[Math.floor(Math.random()*tops.length)];
+  const bot=bots[Math.floor(Math.random()*bots.length)];
+  curOutfit={top,bot,tip:'A clean pairing for the day.',why:'Classic combination.',occ,date:todayStr()};
+  renderOutfit(curOutfit);
+  saveOutfit(curOutfit);
+  document.getElementById('regen-btn').disabled=false;
+}
+
+function renderOutfit(o){
+  const tEl=o.top?.src?`<img class="piece-img" src="${o.top.src}" alt="${o.top.name}"/>`:`<div class="piece-swatch" style="background:${o.top?.hex||'#ccc'}"></div>`;
+  const bEl=o.bot?.src?`<img class="piece-img" src="${o.bot.src}" alt="${o.bot.name}"/>`:`<div class="piece-swatch" style="background:${o.bot?.hex||'#ccc'}"></div>`;
+  document.getElementById('outfit-area').innerHTML=`
+  <div class="card outfit-card">
+    <div class="outfit-top-row">
+      <span style="font-size:.8rem;font-weight:400;color:var(--text);">Complete look</span>
+      <span class="outfit-badge">${o.occ}</span>
+    </div>
+    <div class="pieces-row">
+      <div class="piece">${tEl}<div class="piece-label">${o.top?.name||''}</div></div>
+      <div class="piece-plus">+</div>
+      <div class="piece">${bEl}<div class="piece-label">${o.bot?.name||''}</div></div>
+    </div>
+    <div class="ai-tip"><strong>Tip:</strong> ${o.tip} <span class="ai-why">${o.why}</span></div>
+  </div>`;
+}
+
+function renderEmptyOutfit(){
+  document.getElementById('outfit-area').innerHTML=`<div class="card empty-card"><div class="empty-icon">◎</div><div class="empty-text">Add clothes to your wardrobe to get<br>your daily outfit suggestion.</div></div>`;
+}
+
+// ── SAVE OUTFIT ──
+function saveOutfit(o){
+  const e={date:o.date,topId:o.top?.id,botId:o.bot?.id,topName:o.top?.name,botName:o.bot?.name,topSrc:o.top?.src,botSrc:o.bot?.src,topHex:o.top?.hex,botHex:o.bot?.hex,occ:o.occ};
+  history=history.filter(h=>h.date!==e.date);
+  history.push(e);
+  if(history.length>90)history=history.slice(-90);
+  saveHistoryFS(e);
+  renderRecent();renderCalendar();
+}
+
+// ── RECENT ──
+function renderRecent(){
+  const area=document.getElementById('recent-area');
+  const items=[...history].reverse().slice(0,6);
+  if(!items.length){area.innerHTML=`<div style="padding:1rem .15rem;font-size:.78rem;color:var(--text3);font-weight:300;">No outfits logged yet.</div>`;return;}
+  area.innerHTML=items.map(h=>{
+    const tEl=h.topSrc?`<img class="r-thumb" src="${h.topSrc}" alt="${h.topName}"/>`:`<div class="r-thumb-sw" style="background:${h.topHex||'#ccc'}"></div>`;
+    const bEl=h.botSrc?`<img class="r-thumb" src="${h.botSrc}" alt="${h.botName}"/>`:`<div class="r-thumb-sw" style="background:${h.botHex||'#ccc'}"></div>`;
+    const lbl=h.date===todayStr()?'Today':fmtDate(h.date);
+    return `<div class="recent-item">${tEl}${bEl}<div class="recent-info"><div class="recent-names">${h.topName||''} + ${h.botName||''}</div><div class="recent-meta">${lbl} · ${h.occ||''}</div></div></div>`;
+  }).join('');
+}
+
+// ── DUST ──
+function renderDust(){
+  const area=document.getElementById('dust-area');
+  if(!clothes.length){area.innerHTML='';return;}
+  const ago=new Date();ago.setDate(ago.getDate()-30);
+  const worn=new Set(history.filter(h=>new Date(h.date)>ago).flatMap(h=>[String(h.topId),String(h.botId)]).filter(Boolean));
+  const dusty=clothes.filter(c=>!worn.has(String(c.id)));
+  if(!dusty.length||!history.length){area.innerHTML='';return;}
+  area.innerHTML=`<div class="dust-card" style="margin-bottom:1rem;">
+    <div class="dust-title">Not worn in 30+ days</div>
+    <div class="dust-scroll">${dusty.slice(0,10).map(c=>`<div class="dust-chip">${c.name}</div>`).join('')}</div>
+  </div>`;
+}
+
+// ── WARDROBE ──
+const CATS={'all':'All','t-shirt':'T-shirts','casual-shirt':'Casual shirts','formal-shirt':'Formal shirts','jeans':'Jeans','linen-pants':'Linen pants','formal-pants':'Formal pants','shorts':'Shorts','jacket':'Jackets'};
+function renderWardrobe(){
+  const tops=clothes.filter(iTop).length, bots=clothes.filter(iBot).length;
+  document.getElementById('w-stats').innerHTML=[{n:clothes.length,l:'total'},{n:tops,l:'tops'},{n:bots,l:'bottoms'}].map(s=>`<div class="stat-box"><div class="stat-n">${s.n}</div><div class="stat-l">${s.l}</div></div>`).join('');
+  const types=['all',...new Set(clothes.map(c=>c.type))].filter(k=>CATS[k]);
+  document.getElementById('w-filters').innerHTML=types.map(k=>`<div class="f-chip ${wFilter===k?'on':''}" onclick="setWFilter('${k}')">${CATS[k]}</div>`).join('');
+  const filtered=wFilter==='all'?clothes:clothes.filter(c=>c.type===wFilter);
+  const ago=new Date();ago.setDate(ago.getDate()-30);
+  const worn=new Set(history.filter(h=>new Date(h.date)>ago).flatMap(h=>[String(h.topId),String(h.botId)]).filter(Boolean));
+  const grid=document.getElementById('w-grid');
+  if(!filtered.length){grid.innerHTML=`<div style="grid-column:1/-1" class="empty-card"><div class="empty-icon">▦</div><div class="empty-text">${clothes.length?'Nothing in this category.':'Tap + to add your first item.'}</div></div>`;return;}
+  grid.innerHTML=filtered.map(c=>{
+    const dusty=history.length&&!worn.has(String(c.id));
+    return `<div class="w-card">
+      ${dusty?'<div class="dust-dot"></div>':''}
+      <button class="w-del" onclick="delCloth(${c.id})">✕</button>
+      ${c.src?`<img class="w-card-img" src="${c.src}" alt="${c.name}" loading="lazy"/>`:`<div class="w-card-sw" style="background:${c.hex||'#ccc'}"></div>`}
+      <div class="w-card-info"><div class="w-card-name">${c.name}</div><div class="w-card-meta">${c.color||''}</div></div>
+    </div>`;
+  }).join('');
+  updateFab();
+}
+function setWFilter(f){wFilter=f;renderWardrobe();renderCapsule();}
+function delCloth(id){deleteClothFS(id);clothes=clothes.filter(c=>c.id!=id);renderWardrobe();renderDust();toast('Removed');}
+
+// ── HISTORY ──
+function renderHistory(){
+  const area=document.getElementById('hist-list');
+  const all=[...history].reverse();
+  if(!all.length){area.innerHTML=`<div style="padding:1rem .15rem;font-size:.78rem;color:var(--text3);font-weight:300;">No outfits logged yet.</div>`;return;}
+  area.innerHTML=all.map(h=>{
+    const tEl=h.topSrc?`<img class="r-thumb" src="${h.topSrc}" alt="${h.topName}"/>`:`<div class="r-thumb-sw" style="background:${h.topHex||'#ccc'}"></div>`;
+    const bEl=h.botSrc?`<img class="r-thumb" src="${h.botSrc}" alt="${h.botName}"/>`:`<div class="r-thumb-sw" style="background:${h.botHex||'#ccc'}"></div>`;
+    return `<div class="hist-item"><div class="hist-date">${fmtDate(h.date)}</div><div class="hist-thumbs">${tEl}${bEl}</div><div class="hist-info"><div class="hist-names">${h.topName||''} + ${h.botName||''}</div><div class="hist-occ">${h.occ||''}</div></div></div>`;
+  }).join('');
+}
+
+function renderCalendar(){
+  const strip=document.getElementById('cal-row');
+  const hDates=new Set(history.map(h=>h.date));
+  const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d);}
+  const dns=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  strip.innerHTML=days.map(d=>{
+    const ds=d.toISOString().split('T')[0];
+    const isT=ds===todayStr(), has=hDates.has(ds);
+    return `<div class="cal-day ${isT?'today':''} ${has?'has':''}">
+      <div class="cal-dn">${dns[d.getDay()]}</div>
+      <div class="cal-dd">${d.getDate()}</div>
+      ${has?'<div class="cal-dot"></div>':'<div style="height:4px;"></div>'}
+    </div>`;
+  }).join('');
+}
+
+// ── UPLOAD ──
+function openUpload(){document.getElementById('up-overlay').classList.add('open');document.getElementById('up-sheet').classList.add('open');}
+function closeUpload(){document.getElementById('up-overlay').classList.remove('open');document.getElementById('up-sheet').classList.remove('open');queue=[];renderQueue();}
+function addPhotos(e){
+  Array.from(e.target.files).forEach(f=>{
+    if(!f.type.startsWith('image/'))return;
+    const r=new FileReader();
+    r.onload=ev=>{queue.push({id:Date.now()+Math.random(),src:ev.target.result,file:f,status:'pending'});renderQueue();};
+    r.readAsDataURL(f);
+  });
+  e.target.value='';
+}
+function renderQueue(){
+  const g=document.getElementById('q-grid'),b=document.getElementById('scan-btn');
+  const pend=queue.filter(q=>q.status==='pending').length;
+  b.disabled=!pend||scanning;
+  b.textContent=scanning?'Scanning…':`Scan ${queue.length} item${queue.length!==1?'s':''} with AI`;
+  g.innerHTML=queue.map(q=>`<div class="q-item"><img class="q-img" src="${q.src}" alt="item"/><div class="q-over q-${q.status}">${q.status==='scanning'?'<span class="spin">↺</span>':q.status==='done'?'✓':q.status==='err'?'!':''}</div></div>`).join('');
+}
+async function scanAll(){
+  if(scanning)return;
+  gemKey = _memKey || localStorage.getItem('saya_k') || gemKey;
+  if(!gemKey){toast('Add your Gemini API key in Settings first');return;}
+  const pend=queue.filter(q=>q.status==='pending');
+  if(!pend.length)return;
+  scanning=true;
+  document.getElementById('scan-btn').textContent='Scanning…';
+
+  for(const item of pend){
+    item.status='scanning'; renderQueue();
+    try{
+      // Compress image first to ~800px for faster upload to Gemini
+      const compressed = await compressImage(item.src, 800, 0.8);
+      const b64 = compressed.split(',')[1];
+      const mime = 'image/jpeg';
+
+      const prompt = 'You are a clothing expert. Look at this clothing item photo carefully. Respond ONLY as valid JSON with no extra text: {"name":"short descriptive name","type":"t-shirt or casual-shirt or formal-shirt or jeans or linen-pants or formal-pants or shorts or jacket","color":"main color name","hex":"hex code like #4A7A5A","fit":"slim or regular or relaxed or oversized","fabric":"e.g. cotton","occasion":"casual or formal or smart-casual or versatile","pattern":"solid or striped or checked or printed or other"}';
+
+      const res = await callGemVision(b64, mime, prompt);
+      const cleaned = res.replace(/```json|```/g,'').trim();
+      const p = JSON.parse(cleaned);
+
+      // Save compressed version to Firestore
+      const newItem = {id: Date.now()+Math.random(), src: compressed, ...p};
+      await saveClothFS(newItem);
+      clothes.push(newItem);
+      item.status = 'done';
+      toast(p.name+' added ✓');
+    }catch(e){
+      console.error('Scan error:', e.message);
+      item.status = 'err';
+      item.errMsg = e.message;
+      toast('Error: '+e.message.slice(0,40));
+    }
+    renderQueue();
+    await new Promise(r=>setTimeout(r,500)); // small gap between requests
+  }
+
+  scanning=false;
+  const done=queue.filter(q=>q.status==='done').length;
+  const errs=queue.filter(q=>q.status==='err').length;
+  queue=queue.filter(q=>q.status!=='done');
+  renderQueue(); renderWardrobe(); renderDust();
+  if(done>0) toast(done+' item'+(done!==1?'s':'')+' saved to wardrobe');
+  if(errs>0) toast(errs+' failed — check API key in Settings');
+  document.getElementById('scan-btn').textContent='Scan with AI';
+  if(!queue.length) setTimeout(closeUpload, 800);
+}
+
+// ── GEMINI ──
+async function callGem(prompt){
+  const key = _memKey || localStorage.getItem('saya_k') || gemKey;
+  if(!key) throw new Error('No API key');
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.4}})});
+  const d=await r.json();if(d.error)throw new Error(d.error.message);
+  return d.candidates[0].content.parts[0].text;
+}
+async function callGemVision(b64,mime,prompt){
+  // Always read freshest key
+  const key = _memKey || localStorage.getItem('saya_k') || gemKey;
+  if(!key) throw new Error('No API key — add it in Settings');
+  gemKey = key;
+  // 30 second timeout
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 30000);
+  try{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${key}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      signal: controller.signal,
+      body:JSON.stringify({
+        contents:[{parts:[{inline_data:{mime_type:mime||'image/jpeg',data:b64}},{text:prompt}]}],
+        generationConfig:{temperature:.2}
+      })
+    });
+    clearTimeout(timeout);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    if(d.error) throw new Error(d.error.message);
+    return d.candidates[0].content.parts[0].text;
+  }catch(e){
+    clearTimeout(timeout);
+    throw e;
+  }
+}
+
+// ── NAV ──
+function navTo(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('vis'));
+  document.getElementById('pg-'+name).classList.add('vis');
+  document.querySelectorAll('.nv').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  updateFab();
+  if(name==='history'){renderHistory();renderCalendar();}
+  if(name==='wardrobe'){renderWardrobe();renderCapsule();}
+}
+function updateFab(){
+  const cur=document.querySelector('.page.vis');
+  document.getElementById('fab').style.display=(cur&&cur.id==='pg-wardrobe')?'flex':'none';
+}
+
+// ── SETTINGS ──
+function openSettings(){
+  document.getElementById('set-overlay').classList.add('open');
+  document.getElementById('set-sheet').classList.add('open');
+  document.getElementById('set-key').value=gemKey;
+  document.getElementById('set-locname').value=loc.name||'';
+  document.getElementById('set-lat').value=loc.lat||'';
+  document.getElementById('set-lon').value=loc.lon||'';
+}
+function closeSettings(){document.getElementById('set-overlay').classList.remove('open');document.getElementById('set-sheet').classList.remove('open');}
+async function testKey(){
+  const k = document.getElementById('set-key').value.trim() || _memKey || localStorage.getItem('saya_k') || gemKey;
+  const res = document.getElementById('key-test-result');
+  res.style.display='block';
+  res.style.background='var(--bg)';
+  res.textContent='Testing…';
+  if(!k){ res.textContent='❌ No key found. Paste your key above first.'; return; }
+  res.textContent='Key found: '+k.slice(0,8)+'… Calling Gemini…';
+  try{
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key='+k,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:'Say hello in one word.'}]}]})
+    });
+    const d = await r.json();
+    if(d.error){
+      res.style.background='#FCEBEB';
+      res.textContent='❌ Gemini error: '+d.error.message;
+    } else {
+      res.style.background='#EEF5F1';
+      res.textContent='✓ Key works! Gemini says: '+d.candidates[0].content.parts[0].text.trim();
+      // Save the working key
+      gemKey=k; _memKey=k;
+      localStorage.setItem('saya_k',k);
+    }
+  }catch(e){
+    res.style.background='#FCEBEB';
+    res.textContent='❌ Network error: '+e.message;
+  }
+}
+function saveSettings(){const k=document.getElementById('set-key').value.trim();if(k){gemKey=k;svLocal();toast('Key saved');}closeSettings();}
+function quickLoc(name,lat,lon){
+  document.getElementById('set-locname').value=name;
+  document.getElementById('set-lat').value=lat;
+  document.getElementById('set-lon').value=lon;
+}
+function saveLocation(){
+  const name=document.getElementById('set-locname').value.trim();
+  const lat=parseFloat(document.getElementById('set-lat').value);
+  const lon=parseFloat(document.getElementById('set-lon').value);
+  if(!name||isNaN(lat)||isNaN(lon)){toast('Fill in all location fields');return;}
+  loc={name,lat,lon};svLocal();
+  closeSettings();
+  fetchWeather();
+  toast('Location updated to '+name);
+}
+async function clearAll(){
+  if(!confirm('Clear all wardrobe data?')) return;
+  try{
+    const cSnap=await db.collection('users').doc(USER_ID).collection('clothes').get();
+    const hSnap=await db.collection('users').doc(USER_ID).collection('history').get();
+    const batch=db.batch();
+    cSnap.docs.forEach(d=>batch.delete(d.ref));
+    hSnap.docs.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+  }catch(e){}
+  clothes=[];history=[];gemKey='';userName='';
+  localStorage.clear();
+  location.reload();
+}
+
+// ── TOAST ──
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+
+// ── FEATURE 1: WORE THIS ──
+function confirmWore(){
+  const btn=document.getElementById('wore-btn');
+  if(!curOutfit)return;
+  // Mark as confirmed wear in history
+  const entry=history.find(h=>h.date===todayStr());
+  if(entry){entry.confirmed=true;saveHistoryFS(entry);}
+  btn.textContent='✓  Worn today — saved to history';
+  btn.classList.add('confirmed');
+  toast('Outfit logged ✓');
+}
+
+// ── FEATURE 2: CAPSULE WARDROBE SCORE ──
+function renderCapsule(){
+  if(!clothes.length){document.getElementById('capsule-card').style.display='none';return;}
+  document.getElementById('capsule-card').style.display='block';
+  const cats=[
+    {key:'t-shirt',label:'T-shirts',ideal:8},
+    {key:'casual-shirt',label:'Casual shirts',ideal:6},
+    {key:'formal-shirt',label:'Formal shirts',ideal:4},
+    {key:'jeans',label:'Jeans',ideal:3},
+    {key:'linen-pants',label:'Linen pants',ideal:3},
+    {key:'formal-pants',label:'Formal pants',ideal:2},
+    {key:'jacket',label:'Jackets',ideal:2},
+  ];
+  const counts=cats.map(c=>({...c,count:clothes.filter(cl=>cl.type===c.key).length}));
+  const maxCount=Math.max(...counts.map(c=>c.count),1);
+  document.getElementById('capsule-bars').innerHTML=counts.map(c=>{
+    const pct=Math.round((c.count/Math.max(c.ideal,1))*100);
+    const over=c.count>c.ideal*1.5;
+    const under=c.count<c.ideal*0.5&&c.ideal>0;
+    return `<div class="cap-row">
+      <div class="cap-label">${c.label}</div>
+      <div class="cap-bar-bg"><div class="cap-bar-fill ${over?'warn':''}" style="width:${Math.min(100,(c.count/maxCount)*100)}%"></div></div>
+      <div class="cap-count">${c.count}</div>
+    </div>`;
+  }).join('');
+
+  // Generate verdict
+  const heaviest=counts.reduce((a,b)=>a.count>b.count?a:b);
+  const lightest=counts.filter(c=>c.ideal>0).reduce((a,b)=>a.count<b.count?a:b);
+  const tops=clothes.filter(c=>['t-shirt','casual-shirt','formal-shirt'].includes(c.type)).length;
+  const bots=clothes.filter(c=>['jeans','linen-pants','formal-pants'].includes(c.type)).length;
+  const ratio=tops&&bots?(tops/bots).toFixed(1):null;
+  let verdict=`<strong>Your wardrobe has ${clothes.length} items.</strong> `;
+  if(ratio) verdict+=`Top-to-bottom ratio is ${ratio}:1 — ${ratio>3?'you have significantly more tops than bottoms. Consider adding more pants.':ratio<1.5?'well balanced.':'reasonable balance.'} `;
+  verdict+=`You have the most <strong>${heaviest.label}</strong> (${heaviest.count}) and fewest <strong>${lightest.label}</strong> (${lightest.count}).`;
+  document.getElementById('capsule-verdict').innerHTML=verdict;
+}
+
+// ── FEATURE 3: PACK FOR A TRIP ──
+let tripDays=2, tripOcc='Casual';
+function openTrip(){document.getElementById('trip-overlay').classList.add('open');document.getElementById('trip-sheet').classList.add('open');document.getElementById('trip-result').innerHTML='';}
+function closeTrip(){document.getElementById('trip-overlay').classList.remove('open');document.getElementById('trip-sheet').classList.remove('open');}
+function setTripDays(n,el){tripDays=n;document.querySelectorAll('#trip-days-chips .trip-chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+function setTripOcc(o,el){tripOcc=o;document.querySelectorAll('#trip-occ-chips .trip-chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+
+async function genTrip(){
+  const dest=document.getElementById('trip-dest').value.trim()||'your destination';
+  const tops=clothes.filter(c=>['t-shirt','casual-shirt','formal-shirt','jacket'].includes(c.type));
+  const bots=clothes.filter(c=>['jeans','linen-pants','formal-pants','shorts'].includes(c.type));
+  if(!tops.length||!bots.length){toast('Add more clothes first');return;}
+  const btn=document.getElementById('trip-gen-btn');
+  btn.disabled=true;btn.textContent='Planning…';
+  document.getElementById('trip-result').innerHTML=Array.from({length:tripDays},(_,i)=>`
+    <div class="trip-day">
+      <div class="trip-day-head"><div class="trip-day-num">Day ${i+1}</div></div>
+      <div class="trip-day-body"><div class="skel" style="flex:1;aspect-ratio:1;border-radius:var(--r-md);"></div><div style="width:20px"></div><div class="skel" style="flex:1;aspect-ratio:1;border-radius:var(--r-md);"></div></div>
+    </div>`).join('');
+
+  const tDesc=tops.map(t=>'id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')).join('\n');
+  const bDesc=bots.map(b=>'id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type).join('\n');
+  const tripPrompt='You are an expert mens stylist. The user is packing for '+tripDays+' days in '+dest+'. Occasion: '+tripOcc+'.\nAvailable tops:\n'+tDesc+'\nAvailable bottoms:\n'+bDesc+'\n\nPlan '+tripDays+' non-repeating outfit combinations. Each day use a different top AND different bottom.\nRespond ONLY as valid JSON, no markdown:\n{"days":[{"day":1,"topId":ID,"botId":ID,"tip":"one short practical tip for this day"},...]}'
+
+  try{
+    const res=await callGem(tripPrompt);
+    const p=JSON.parse(res.replace(/```json|```/g,'').trim());
+    document.getElementById('trip-result').innerHTML=`<div style="font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:.75rem;font-weight:400;">Your ${tripDays}-day pack for ${dest}</div>`+
+    p.days.map(d=>{
+      const top=clothes.find(c=>c.id==d.topId)||tops[d.day%tops.length];
+      const bot=clothes.find(c=>c.id==d.botId)||bots[d.day%bots.length];
+      const tEl=top?.src?`<img class="trip-piece-img" src="${top.src}" alt="${top.name}"/>`:`<div class="trip-piece-sw" style="background:${top?.hex||'#ccc'}"></div>`;
+      const bEl=bot?.src?`<img class="trip-piece-img" src="${bot.src}" alt="${bot.name}"/>`:`<div class="trip-piece-sw" style="background:${bot?.hex||'#ccc'}"></div>`;
+      return `<div class="trip-day">
+        <div class="trip-day-head"><div class="trip-day-num">Day ${d.day}</div><div class="trip-day-occ">${tripOcc}</div></div>
+        <div class="trip-day-body">
+          <div class="trip-piece">${tEl}<div class="trip-piece-lbl">${top?.name||''}</div></div>
+          <div class="trip-plus">+</div>
+          <div class="trip-piece">${bEl}<div class="trip-piece-lbl">${bot?.name||''}</div></div>
+        </div>
+        <div class="trip-tip">${d.tip||''}</div>
+      </div>`;
+    }).join('');
+  }catch(e){document.getElementById('trip-result').innerHTML=`<div style="font-size:.82rem;color:var(--text2);">Couldn't plan the trip. Try again.</div>`;}
+  btn.disabled=false;btn.textContent='Plan my outfits ↗';
+}
+
+// ── FEATURE 4: SHOPPING GAP DETECTOR ──
+async function runShopScan(){
+  if(!clothes.length){toast('Add clothes to your wardrobe first');return;}
+  if(!gemKey){toast('Add your Gemini API key in Settings');return;}
+  const btn=document.getElementById('shop-scan-btn');
+  btn.disabled=true;btn.textContent='Analysing…';
+  document.getElementById('shop-result').innerHTML=`<div style="display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--text2);"><span class="spin">↺</span> Checking trends and your wardrobe…</div>`;
+
+  const summary=Object.entries(
+    clothes.reduce((acc,c)=>{acc[c.type]=(acc[c.type]||[]);acc[c.type].push(c.color+' '+c.name);return acc;},{})
+  ).map(([k,v])=>k+': '+v.length+' items ('+v.slice(0,3).join(', ')+(v.length>3?'\u2026':'')+')').join('\n');
+
+  const colors=[...new Set(clothes.map(c=>c.color).filter(Boolean))].slice(0,12).join(', ');
+  const occasions=[...new Set(clothes.map(c=>c.occasion).filter(Boolean))].join(', ');
+
+  try{
+    const res=await callGem(`You are an expert men's fashion stylist and trend analyst based in Kerala, India. Today is ${new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'})}.
+
+The user's current wardrobe:
+${summary}
+
+Color palette: ${colors}
+Occasion coverage: ${occasions}
+
+Analyse this wardrobe against current men's fashion trends in India (2025). Identify the top 5 most impactful gaps — items that are (a) missing or under-represented AND (b) currently trending or highly versatile.
+
+For each gap, explain WHY it matters for his specific wardrobe and what current trend makes it relevant right now.
+
+Respond ONLY as valid JSON, no markdown:
+{"gaps":[{"item":"specific item name","priority":"high|medium|low","why":"2 sentences on why this is missing from HIS wardrobe specifically","trend":"1 sentence on why this is trending right now in India in ${new Date().getFullYear()}"}],"summary":"2 sentence overall assessment of his wardrobe"}`);
+    const p=JSON.parse(res.replace(/```json|```/g,'').trim());
+    document.getElementById('shop-result').innerHTML=
+      `<div style="font-size:.82rem;color:var(--text2);line-height:1.65;margin-bottom:1rem;padding:.85rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);font-weight:300;">${p.summary}</div>`+
+      p.gaps.map(g=>`<div class="gap-card">
+        <div class="gap-priority gap-${g.priority}">${g.priority} priority</div>
+        <div class="gap-item">${g.item}</div>
+        <div class="gap-why">${g.why}</div>
+        <div class="gap-trend">↗ ${g.trend}</div>
+      </div>`).join('');
+  }catch(e){
+    document.getElementById('shop-result').innerHTML=`<div style="font-size:.82rem;color:var(--text2);">Analysis failed. Check your API key and try again.</div>`;
+  }
+  btn.disabled=false;btn.textContent='Analyse my wardrobe ↗';
+}
+
+</script>
+</body>
+</html>
