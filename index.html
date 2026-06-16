@@ -993,19 +993,23 @@ async function genOutfit(){
   const last=history.length?history[history.length-1]:null;
   const avoidLine=last?'Avoid repeating top id '+last.topId+' from yesterday.':'';
   const pinLine = forcedBot ? 'IMPORTANT: The user is wearing '+forcedBot.name+' ('+forcedBot.color+') all week. You MUST use botId:'+forcedBot.id+'. Only choose the best TOP to pair with it.' : '';
-  const wornLine = wornTops.size ? 'Tops already worn with this bottom this week — avoid these top ids: '+[...wornTops].join(', ') : '';
+  const wornLine = wornTopsThisWeek.size ? 'Tops already worn this week — avoid: '+[...wornTopsThisWeek].join(', ') : '';
   const tDesc=availableTops.map((t,i)=>i+'|id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')+'|'+(t.pattern||'solid')).join('\n');
   const bDesc=(forcedBot?[forcedBot]:bots).map((b,i)=>i+'|id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type+'|'+(b.fit||'regular')).join('\n');
 
   try{
-    const res=await callGem(`You are an expert men's stylist based in Kerala, India.
-Weather: ${wx.temp}°C, ${wx.desc}. Occasion: ${occ}. ${avoidLine}
-
-Tops:\n${tDesc}\nBottoms:\n${bDesc}
-
-Choose the single best complete outfit. Consider color harmony, ${loc.name} heat (${wx.temp}°C), occasion fit, fabric comfort.
-Respond ONLY as valid JSON, no markdown:
-{"topId":ID,"botId":ID,"tip":"2-sentence practical tip — shoes, tuck, sleeve roll etc.","why":"One sentence on why this color pairing works."}`);
+    const recentNote = recentCombos.slice(0,8).length ? 'STRICTLY AVOID these recently shown combos (topId_botId): '+recentCombos.slice(0,8).join(', ')+'. Pick a different combination.' : '';
+    const botNote = forcedBot
+      ? 'The user is wearing '+forcedBot.name+' ('+forcedBot.color+'). MUST use botId '+forcedBot.id+'. Find the best matching top with colour score 8+.'
+      : isEvent ? 'This is an event ('+occ+'). Pick the best complete outfit freely, score 8+ only.'
+      : 'Pick the best outfit, colour score 8+ only.';
+    const fullPrompt = 'You are an expert mens stylist in Kerala, India.'
+      +' Weather: '+wx.temp+'C, '+wx.desc+'. Occasion: '+occ+'. '+avoidLine+' '+recentNote+' '+botNote
+      +'\n\nAvailable tops:\n'+tDesc
+      +'\n\nAvailable bottoms:\n'+bDesc
+      +'\n\nRULES: Only suggest colour harmony score 8+. Never repeat recent combos. Consider weather and occasion.'
+      +'\n\nRespond ONLY as valid JSON: {"topId":ID,"botId":ID,"tip":"2-sentence practical tip","why":"one sentence on colour pairing","verdict":"works or risky or avoid","score":1-10,"theory":"2 sentences in simple language why colours work or clash","swap_ids":[],"swap_reason":""}';
+    const res = await callGem(fullPrompt);
     const p=JSON.parse(res.replace(/```json|```/g,'').trim());
     const top=clothes.find(c=>c.id==p.topId)||tops[0];
     const bot=clothes.find(c=>c.id==p.botId)||bots[0];
