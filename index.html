@@ -1009,8 +1009,10 @@ Respond ONLY as valid JSON, no markdown:
     const p=JSON.parse(res.replace(/```json|```/g,'').trim());
     const top=clothes.find(c=>c.id==p.topId)||tops[0];
     const bot=clothes.find(c=>c.id==p.botId)||bots[0];
-    curOutfit={top,bot,tip:p.tip,why:p.why,occ,date:todayStr()};
-    saveRecentCombo(top.id, bot.id);
+    curOutfit={top,bot,tip:p.tip,why:p.why,occ,date:todayStr(),
+      colourData:{verdict:p.verdict,score:p.score,theory:p.theory,swap_ids:p.swap_ids||[],swap_reason:p.swap_reason||''}
+    };
+    saveRecentCombo(String(top.id), String(bot.id));
     renderOutfit(curOutfit);
     saveOutfit(curOutfit);
   }catch(e){pickRandom(tops,bots);}
@@ -1043,80 +1045,74 @@ function renderOutfit(o){
     +'<div class="outfit-plus-v2">+</div>'
     +'<div class="outfit-piece-v2">'+bEl+'<div class="outfit-piece-name">'+(o.bot?.name||'')+'</div></div>'
     +'</div>'
-    +'<div class="colour-loading" id="colour-loading"><span class="spin">↺</span> Analysing colour match…</div>'
-    +'<div class="colour-verdict" id="colour-verdict" style="display:none;"></div>'
+    +'<div class="colour-loading" id="colour-loading" style="'+(o.colourData?'display:none':'')+'"><span class="spin">↺</span> Analysing colour match…</div>'
+    +'<div class="colour-verdict" id="colour-verdict" style="'+(o.colourData?'':'display:none')+'"></div>'
     +'<div class="stylist-tip"><strong>Tip:</strong> '+(o.tip||'')+' <span class="ai-why">'+(o.why||'')+'</span></div>'
     +'</div>';
 
-  // Run colour analysis
-  runColourVerdict(o.top, o.bot);
+  // If colour data already available from combined call — render immediately
+  if(o.colourData && o.colourData.verdict){
+    renderColourVerdict(o.colourData, o.top, o.bot);
+  } else {
+    // Fallback: run separate colour call (e.g. after regen without AI)
+    runColourVerdict(o.top, o.bot);
+  }
+}
+
+function renderColourVerdict(p, top, bot){
+  const loading = document.getElementById('colour-loading');
+  const verdict = document.getElementById('colour-verdict');
+  if(!verdict) return;
+  if(loading) loading.style.display='none';
+  verdict.style.display='block';
+
+  const badgeClass = p.verdict==='works'?'verdict-works':p.verdict==='risky'?'verdict-risky':'verdict-avoid';
+  const badgeIcon = p.verdict==='works'?'✓':p.verdict==='risky'?'⚠':'✗';
+  const badgeText = p.verdict==='works'?'Good match':p.verdict==='risky'?'Risky combo':'Avoid this';
+  const score = p.score||'';
+  const conf = p.confidence||'';
+
+  let swapHtml='';
+  if(p.swap_ids && p.swap_ids.length>0){
+    const swapItems=p.swap_ids.map(id=>{
+      const item=clothes.find(c=>c.id==id||String(c.id)==String(id));
+      if(!item) return '';
+      const th=item.src?'<img class="swap-thumb" src="'+item.src+'" alt="'+item.name+'"/>'
+        :'<div class="swap-thumb-sw" style="background:'+(item.hex||'#ccc')+'"></div>';
+      return '<div class="swap-item" onclick="swapBottom('+item.id+')" title="'+item.name+'">'+th
+        +'<div class="swap-name">'+item.name+'</div>'
+        +'<div class="swap-score">Better match</div></div>';
+    }).join('');
+    if(swapItems){
+      swapHtml='<div class="swap-section" style="display:block;margin-top:.65rem;">'
+        +'<div class="swap-title">Better matches for this top</div>'
+        +'<div class="swap-options">'+swapItems+'</div>'
+        +(p.swap_reason?'<div style="font-size:.72rem;color:var(--text3);margin-top:.5rem;font-weight:300;">'+p.swap_reason+'</div>':'')
+        +'</div>';
+    }
+  }
+
+  verdict.innerHTML='<div class="verdict-row">'
+    +'<div class="verdict-badge '+badgeClass+'">'+badgeIcon+' '+badgeText+'</div>'
+    +(score?'<div class="verdict-score">'+score+'/10'+(conf?' · '+conf+' confidence':'')+'</div>':'')
+    +'</div>'
+    +'<div class="colour-theory"><strong>Why:</strong> '+(p.theory||'')+'</div>'
+    +swapHtml;
 }
 
 async function runColourVerdict(top, bot){
-  const loading = document.getElementById('colour-loading');
-  const verdict = document.getElementById('colour-verdict');
-  if(!loading || !verdict) return;
-
-  if(!gemKey || !top || !bot){
-    loading.style.display='none';
-    return;
-  }
-
-  // Get other bottoms for swap suggestions
-  const otherBots = clothes.filter(c=>
-    ['jeans','linen-pants','formal-pants','shorts'].includes(c.type) && c.id != bot.id
-  ).slice(0,5);
-
+  const loading=document.getElementById('colour-loading');
+  const verdict=document.getElementById('colour-verdict');
+  if(!loading||!verdict||!gemKey||!top||!bot){if(loading)loading.style.display='none';return;}
+  loading.style.display='flex';
+  verdict.style.display='none';
   try{
-    const prompt = 'You are a mens colour theory expert. Analyse this outfit combination:\n'
-      +'Top: '+top.name+' ('+top.color+(top.fabric?', '+top.fabric:'')+')\n'
-      +'Bottom: '+bot.name+' ('+bot.color+(bot.fabric?', '+bot.fabric:'')+')\n'
-      +'Other available bottoms: '+otherBots.map((b,i)=>'id:'+b.id+'|'+b.name+'|'+b.color).join(', ')+'\n\n'
-      +'Give a detailed colour verdict. Use simple language a non-fashion person can understand.\n'
-      +'Respond ONLY as valid JSON:\n'
-      +'{"verdict":"works or risky or avoid","score":1-10,"theory":"2 sentences explaining WHY these colours work or clash — use simple terms like warm/cool, contrast, complementary etc","confidence":"high or medium or low","swap_ids":[list of bottom ids that would work BETTER with this top, max 3, empty array if current is already great],"swap_reason":"one sentence on why the suggested swaps work better, empty string if no swaps needed"}';
-
-    const res = await callGem(prompt);
-    const p = JSON.parse(res.replace(/```json|```/g,'').trim());
-
-    loading.style.display='none';
-    verdict.style.display='block';
-
-    const badgeClass = p.verdict==='works' ? 'verdict-works' : p.verdict==='risky' ? 'verdict-risky' : 'verdict-avoid';
-    const badgeIcon = p.verdict==='works' ? '✓' : p.verdict==='risky' ? '⚠' : '✗';
-    const badgeText = p.verdict==='works' ? 'Good match' : p.verdict==='risky' ? 'Risky combo' : 'Avoid this';
-
-    // Build swap section if needed
-    let swapHtml = '';
-    if(p.swap_ids && p.swap_ids.length > 0){
-      const swapItems = p.swap_ids.map(id=>{
-        const item = clothes.find(c=>c.id==id);
-        if(!item) return '';
-        const th = item.src
-          ? '<img class="swap-thumb" src="'+item.src+'" alt="'+item.name+'"/>'
-          : '<div class="swap-thumb-sw" style="background:'+(item.hex||'#ccc')+'"></div>';
-        return '<div class="swap-item" onclick="swapBottom('+item.id+')" title="'+item.name+'">'+th+'<div class="swap-name">'+item.name+'</div><div class="swap-score">Better match</div></div>';
-      }).join('');
-      if(swapItems){
-        swapHtml = '<div class="swap-section" style="display:block;margin-top:.65rem;">'
-          +'<div class="swap-title">Better matches for this top</div>'
-          +'<div class="swap-options">'+swapItems+'</div>'
-          +(p.swap_reason ? '<div style="font-size:.72rem;color:var(--text3);margin-top:.5rem;font-weight:300;">'+p.swap_reason+'</div>' : '')
-          +'</div>';
-      }
-    }
-
-    verdict.innerHTML =
-      '<div class="verdict-row">'
-      +'<div class="verdict-badge '+badgeClass+'">'+badgeIcon+' '+badgeText+'</div>'
-      +'<div class="verdict-score">'+p.score+'/10 · '+p.confidence+' confidence</div>'
-      +'</div>'
-      +'<div class="colour-theory"><strong>Why:</strong> '+p.theory+'</div>'
-      +swapHtml;
-
-  }catch(e){
-    loading.style.display='none';
-  }
+    const otherBots=clothes.filter(c=>['jeans','linen-pants','formal-pants','shorts'].includes(c.type)&&c.id!=bot.id).slice(0,4);
+    const prompt='You are a mens colour expert. Outfit: Top: '+top.name+' ('+top.color+'). Bottom: '+bot.name+' ('+bot.color+'). Other bottoms: '+otherBots.map(b=>'id:'+b.id+'|'+b.name+'|'+b.color).join(', ')+'. Respond ONLY as JSON: {"verdict":"works or risky or avoid","score":1-10,"theory":"2 sentences in simple language","confidence":"high or medium or low","swap_ids":[],"swap_reason":""}';
+    const res=await callGem(prompt);
+    const p=JSON.parse(res.replace(/```json|```/g,'').trim());
+    renderColourVerdict(p, top, bot);
+  }catch(e){if(loading)loading.style.display='none';}
 }
 
 function swapBottom(id){
