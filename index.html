@@ -1015,7 +1015,16 @@ Respond ONLY as valid JSON, no markdown:
     saveRecentCombo(String(top.id), String(bot.id));
     renderOutfit(curOutfit);
     saveOutfit(curOutfit);
-  }catch(e){pickRandom(tops,bots);}
+  }catch(e){
+    console.error('genOutfit error:', e.message, e);
+    document.getElementById('outfit-area').innerHTML=
+      '<div class="card" style="padding:1rem;margin-bottom:.75rem;">'
+      +'<div style="font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:#A04040;margin-bottom:.5rem;">Error loading outfit</div>'
+      +'<div style="font-size:.8rem;color:var(--text2);line-height:1.6;font-weight:300;">'+e.message+'</div>'
+      +'<div style="font-size:.72rem;color:var(--text3);margin-top:.5rem;">Tap the refresh button to try again.</div>'
+      +'</div>';
+    toast('Error: '+e.message.slice(0,50));
+  }
   document.getElementById('regen-btn').disabled=false;
 }
 
