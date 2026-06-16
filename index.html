@@ -370,6 +370,28 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 
 .colour-loading { padding:1rem; display:flex; align-items:center; gap:8px; font-size:.8rem; color:var(--text2); border-top:1px solid var(--border); }
 
+
+/* ── MANUAL PICKER ── */
+.picker-row { display:flex; gap:8px; margin-bottom:1rem; }
+.picker-box { flex:1; background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); padding:.75rem; cursor:pointer; display:flex; align-items:center; gap:.65rem; transition:border-color .13s; }
+.picker-box:active { border-color:var(--acc); }
+.picker-box-thumb { width:40px; height:40px; border-radius:var(--r-sm); object-fit:cover; background:var(--bg3); border:1px solid var(--border); flex-shrink:0; }
+.picker-box-sw { width:40px; height:40px; border-radius:var(--r-sm); background:var(--bg3); border:1px solid var(--border); flex-shrink:0; }
+.picker-box-info { flex:1; overflow:hidden; }
+.picker-box-label { font-size:.6rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); font-weight:400; }
+.picker-box-name { font-size:.75rem; color:var(--text); font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:1px; }
+.picker-box-empty { font-size:.75rem; color:var(--text3); font-weight:300; }
+
+/* ── ITEM PICKER SHEET ── */
+.item-pick-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-height:60vh; overflow-y:auto; margin-bottom:1rem; }
+.item-pick-grid::-webkit-scrollbar { display:none; }
+.item-pick-card { background:var(--bg); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; cursor:pointer; transition:border-color .13s; }
+.item-pick-card.chosen { border:2px solid var(--acc); }
+.item-pick-img { width:100%; aspect-ratio:.88; object-fit:cover; display:block; background:var(--bg3); }
+.item-pick-sw { width:100%; aspect-ratio:.88; display:block; }
+.item-pick-name { font-size:.65rem; padding:5px 6px 7px; color:var(--text); font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.auto-btn { width:100%; padding:.75rem; background:var(--bg); color:var(--text2); border:1px solid var(--border); border-radius:var(--r-md); font-family:var(--sans); font-size:.8rem; font-weight:300; cursor:pointer; letter-spacing:.04em; margin-bottom:.5rem; }
+
 </style>
 </head>
 <body>
@@ -441,6 +463,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
       </div>
 
       <div class="wx-warn" id="wx-warn"></div>
+
       <div class="sec-title" id="outfit-title">Today's outfit</div>
       <div id="outfit-area"></div>
       <div class="clash-warn" id="clash-warn"></div>
@@ -847,16 +870,24 @@ async function genOutfit(){
   const tops=clothes.filter(iTop), bots=clothes.filter(iBot);
   if(!tops.length||!bots.length){renderEmptyOutfit();return;}
 
-  // If occasion is formal, ignore pin and choose freely
   const isFormal = ['Formal','Office'].includes(occ);
 
-  // Use pinned bottom if set and not formal
-  let forcedBot = (!isFormal && pinnedBottom) ? clothes.find(c=>c.id==pinnedBottom.id) : null;
+  // Manual picks override everything
+  let forcedTop = manualTop || null;
+  let forcedBot = manualBot || (!isFormal && pinnedBottom ? clothes.find(c=>c.id==pinnedBottom.id) : null);
 
-  // Get tops already worn with this pin this week — avoid repeating
-  const wornTops = pinnedBottom && !isFormal ? getWornTopsWithPin() : new Set();
-  let availableTops = tops.filter(t=>!wornTops.has(String(t.id)));
-  if(!availableTops.length) availableTops = tops; // all worn — reset and reuse
+  const wornTops = pinnedBottom && !isFormal && !manualBot ? getWornTopsWithPin() : new Set();
+  let availableTops = forcedTop ? [forcedTop] : tops.filter(t=>!wornTops.has(String(t.id)));
+  if(!availableTops.length) availableTops = tops;
+
+  // Exclude recently shown combos to avoid loops (unless manual pick)
+  if(!forcedTop && !forcedBot){
+    availableTops = availableTops.filter(t=>{
+      const bPool = forcedBot?[forcedBot]:bots;
+      return bPool.some(b=>!wasRecentlyShown(t.id,b.id));
+    });
+    if(!availableTops.length) availableTops = tops; // full reset
+  }
 
   if(!gemKey){pickRandom(availableTops, forcedBot?[forcedBot]:bots);return;}
 
@@ -884,6 +915,7 @@ Respond ONLY as valid JSON, no markdown:
     const top=clothes.find(c=>c.id==p.topId)||tops[0];
     const bot=clothes.find(c=>c.id==p.botId)||bots[0];
     curOutfit={top,bot,tip:p.tip,why:p.why,occ,date:todayStr()};
+    saveRecentCombo(top.id, bot.id);
     renderOutfit(curOutfit);
     saveOutfit(curOutfit);
   }catch(e){pickRandom(tops,bots);}
@@ -1659,6 +1691,103 @@ async function genMultiOccasion(){
       +'<div class="multi-change-tip">↕ '+p.change_tip+'</div>'
       +'</div></div>';
   }catch(e){}
+}
+
+
+// ── MANUAL ITEM PICKER ──
+let manualTop = null; // user-chosen top
+let manualBot = null; // user-chosen bottom
+let itemPickMode = 'top'; // 'top' or 'bot'
+
+// Track recently suggested combos to avoid loops
+let recentCombos = JSON.parse(localStorage.getItem('saya_recent_combos') || '[]');
+function saveRecentCombo(topId, botId){
+  const key = topId+'_'+botId;
+  recentCombos = recentCombos.filter(k=>k!==key);
+  recentCombos.unshift(key);
+  if(recentCombos.length > 20) recentCombos = recentCombos.slice(0,20);
+  try{ localStorage.setItem('saya_recent_combos', JSON.stringify(recentCombos)); }catch(e){}
+}
+function wasRecentlyShown(topId, botId){
+  return recentCombos.slice(0,8).includes(topId+'_'+botId);
+}
+
+function updatePickerUI(){
+  const topThumb = document.getElementById('pick-top-thumb');
+  const topName = document.getElementById('pick-top-name');
+  const botThumb = document.getElementById('pick-bot-thumb');
+  const botName = document.getElementById('pick-bot-name');
+  if(!topThumb) return;
+
+  if(manualTop){
+    topThumb.style.background = manualTop.hex||'#ccc';
+    if(manualTop.src){ topThumb.style.backgroundImage='url('+manualTop.src+')'; topThumb.style.backgroundSize='cover'; topThumb.style.backgroundPosition='center'; }
+    topName.textContent = manualTop.name;
+  } else {
+    topThumb.style.background = 'var(--bg3)';
+    topThumb.style.backgroundImage = '';
+    topName.textContent = 'Auto select';
+  }
+
+  if(manualBot){
+    botThumb.style.background = manualBot.hex||'#ccc';
+    if(manualBot.src){ botThumb.style.backgroundImage='url('+manualBot.src+')'; botThumb.style.backgroundSize='cover'; botThumb.style.backgroundPosition='center'; }
+    botName.textContent = manualBot.name;
+  } else {
+    botThumb.style.background = 'var(--bg3)';
+    botThumb.style.backgroundImage = '';
+    botName.textContent = 'Auto select';
+  }
+}
+
+function openItemPicker(mode){
+  itemPickMode = mode;
+  const isTop = mode === 'top';
+  const items = isTop ? clothes.filter(iTop) : clothes.filter(iBot);
+  const chosen = isTop ? manualTop : manualBot;
+
+  document.getElementById('item-pick-title').textContent = isTop ? 'Choose a top' : 'Choose a bottom';
+  document.getElementById('item-pick-sub').textContent = isTop
+    ? 'Saya will find the best matching bottom for it.'
+    : 'Saya will find the best matching top for it.';
+
+  const grid = document.getElementById('item-pick-grid');
+  if(!items.length){ toast('Add clothes to your wardrobe first'); return; }
+
+  grid.innerHTML = items.map(item =>
+    '<div class="item-pick-card '+(chosen&&chosen.id==item.id?'chosen':'')+'" onclick="selectItem('+item.id+')">'
+    +(item.src
+      ? '<img class="item-pick-img" src="'+item.src+'" alt="'+item.name+'" loading="lazy"/>'
+      : '<div class="item-pick-sw" style="background:'+(item.hex||'#ccc')+'"></div>')
+    +'<div class="item-pick-name">'+item.name+'</div>'
+    +'</div>'
+  ).join('');
+
+  document.getElementById('item-pick-overlay').classList.add('open');
+  document.getElementById('item-pick-sheet').classList.add('open');
+}
+
+function closeItemPicker(){
+  document.getElementById('item-pick-overlay').classList.remove('open');
+  document.getElementById('item-pick-sheet').classList.remove('open');
+}
+
+function selectItem(id){
+  const item = clothes.find(c=>c.id==id);
+  if(!item) return;
+  if(itemPickMode==='top') manualTop = item;
+  else manualBot = item;
+  closeItemPicker();
+  updatePickerUI();
+  genOutfit(); // regenerate with selection
+}
+
+function clearItemPick(){
+  if(itemPickMode==='top') manualTop = null;
+  else manualBot = null;
+  closeItemPicker();
+  updatePickerUI();
+  genOutfit();
 }
 
 </script>
