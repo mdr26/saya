@@ -281,6 +281,95 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .gap-trend { font-size:.75rem; color:var(--acc-text); margin-top:.4rem; font-weight:300; font-style:italic; }
 .shop-intro { font-size:.82rem; color:var(--text2); line-height:1.6; margin-bottom:1rem; font-weight:300; }
 
+
+/* ── PINNED BOTTOM ── */
+.pin-section { margin-bottom:1rem; }
+.pin-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); padding:.85rem 1rem; display:flex; align-items:center; gap:.85rem; }
+.pin-thumb { width:52px; height:52px; border-radius:var(--r-md); object-fit:cover; border:1px solid var(--border); background:var(--bg3); flex-shrink:0; }
+.pin-thumb-sw { width:52px; height:52px; border-radius:var(--r-md); border:1px solid var(--border); flex-shrink:0; }
+.pin-info { flex:1; }
+.pin-label { font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; color:var(--acc-text); font-weight:400; margin-bottom:2px; }
+.pin-name { font-size:.88rem; font-weight:400; color:var(--text); }
+.pin-days { font-size:.7rem; color:var(--text3); margin-top:2px; font-weight:300; }
+.pin-change { font-size:.72rem; color:var(--text2); text-decoration:none; cursor:pointer; border:1px solid var(--border); border-radius:var(--r-sm); padding:4px 10px; background:var(--bg); white-space:nowrap; font-weight:300; }
+.pin-empty { background:var(--bg2); border:1px dashed var(--border2); border-radius:var(--r-lg); padding:.85rem 1rem; display:flex; align-items:center; justify-content:space-between; gap:.85rem; }
+.pin-empty-text { font-size:.82rem; color:var(--text2); font-weight:300; }
+.pin-set-btn { font-size:.72rem; color:var(--acc-text); border:1px solid #C0DCC8; border-radius:var(--r-sm); padding:4px 10px; background:var(--acc-bg); white-space:nowrap; cursor:pointer; font-weight:400; }
+
+/* ── PIN PICKER SHEET ── */
+.pin-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:1rem; max-height:55vh; overflow-y:auto; }
+.pin-grid::-webkit-scrollbar { display:none; }
+.pin-item { background:var(--bg); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; cursor:pointer; }
+.pin-item.chosen { border:2px solid var(--acc); }
+.pin-item-img { width:100%; aspect-ratio:.88; object-fit:cover; display:block; background:var(--bg3); }
+.pin-item-sw { width:100%; aspect-ratio:.88; display:block; }
+.pin-item-name { font-size:.65rem; padding:5px 6px 6px; color:var(--text); font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+
+/* ── WEATHER WARNING ── */
+.wx-warn { background:#EBF4FB; border:1px solid #B8D8EE; border-radius:var(--r-md); padding:.65rem .9rem; margin-bottom:.85rem; font-size:.78rem; color:#1A4A6A; line-height:1.5; font-weight:300; display:none; }
+.wx-warn strong { font-weight:500; }
+
+/* ── CLASH WARNING ── */
+.clash-warn { background:#FBF0EB; border:1px solid #EED0B8; border-radius:var(--r-md); padding:.65rem .9rem; margin-top:.75rem; font-size:.78rem; color:#6A2A1A; line-height:1.5; font-weight:300; display:none; }
+.clash-warn strong { font-weight:500; }
+
+/* ── PLAN TOMORROW ── */
+.plan-btn { width:100%; padding:.75rem; background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-md); font-family:var(--sans); font-size:.78rem; font-weight:400; letter-spacing:.08em; color:var(--text2); cursor:pointer; margin-bottom:.75rem; transition:background .13s; display:flex; align-items:center; justify-content:center; gap:6px; }
+.plan-btn:active { background:var(--bg3); }
+.plan-tomorrow-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); padding:1rem; margin-bottom:.75rem; display:none; }
+.plan-tomorrow-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:.85rem; }
+.plan-tag { font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; color:#1A4A6A; background:#EBF4FB; border:1px solid #B8D8EE; padding:3px 9px; border-radius:var(--r-sm); font-weight:400; }
+.plan-confirm-btn { padding:5px 14px; background:var(--acc); color:#fff; border:none; border-radius:var(--r-sm); font-family:var(--sans); font-size:.72rem; font-weight:400; cursor:pointer; letter-spacing:.04em; }
+.plan-confirm-btn.confirmed { background:var(--bg3); color:var(--text2); pointer-events:none; }
+
+/* ── MULTI OCCASION ── */
+.multi-occ-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; margin-bottom:.75rem; }
+.multi-occ-head { padding:.75rem 1rem; background:var(--bg3); display:flex; align-items:center; justify-content:space-between; }
+.multi-occ-label { font-size:.7rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text2); font-weight:400; }
+.multi-occ-body { padding:.85rem 1rem; }
+.multi-piece-row { display:flex; gap:8px; align-items:flex-start; margin-bottom:.65rem; }
+.multi-piece-time { font-size:.65rem; color:var(--text3); width:48px; flex-shrink:0; padding-top:14px; font-weight:300; letter-spacing:.04em; }
+.multi-change-tip { font-size:.75rem; color:var(--acc-text); background:var(--acc-bg); border:1px solid #C0DCC8; border-radius:var(--r-sm); padding:.5rem .75rem; margin-top:.5rem; font-weight:300; }
+
+
+/* ── COLOUR VERDICT ── */
+.outfit-card-v2 { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; margin-bottom:.75rem; }
+.outfit-pieces-row { display:flex; gap:10px; padding:1rem 1rem .75rem; align-items:flex-start; }
+.outfit-piece-v2 { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; }
+.outfit-piece-img-v2 { width:100%; aspect-ratio:.9; object-fit:cover; border-radius:var(--r-md); border:1px solid var(--border); display:block; background:var(--bg3); }
+.outfit-piece-sw-v2 { width:100%; aspect-ratio:.9; border-radius:var(--r-md); border:1px solid var(--border); background:var(--bg3); }
+.outfit-piece-name { font-size:.68rem; color:var(--text2); text-align:center; line-height:1.3; font-weight:300; }
+.outfit-plus-v2 { display:flex; align-items:center; justify-content:center; padding-top:30%; color:var(--text3); font-size:1rem; }
+
+.colour-verdict { padding:.85rem 1rem; border-top:1px solid var(--border); }
+.verdict-row { display:flex; align-items:center; gap:.75rem; margin-bottom:.75rem; }
+.verdict-badge { display:flex; align-items:center; gap:5px; padding:5px 12px; border-radius:var(--r-sm); font-size:.78rem; font-weight:500; letter-spacing:.04em; flex-shrink:0; }
+.verdict-works { background:#EEF5F1; color:#1A5A2A; border:1px solid #B8DCC8; }
+.verdict-risky { background:#FBF5E6; color:#6A4A10; border:1px solid #E8D8A0; }
+.verdict-avoid { background:#FCEBEB; color:#6A1A1A; border:1px solid #EEC8C8; }
+.verdict-score { margin-left:auto; font-size:.7rem; color:var(--text3); font-weight:300; }
+
+.colour-theory { font-size:.8rem; color:var(--text2); line-height:1.65; margin-bottom:.75rem; font-weight:300; }
+.colour-theory strong { color:var(--text); font-weight:400; }
+
+.swap-section { background:var(--bg); border:1px solid var(--border); border-radius:var(--r-md); padding:.75rem; display:none; }
+.swap-title { font-size:.65rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); font-weight:400; margin-bottom:.6rem; }
+.swap-options { display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; }
+.swap-options::-webkit-scrollbar { display:none; }
+.swap-item { flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; }
+.swap-thumb { width:52px; height:52px; border-radius:var(--r-sm); object-fit:cover; border:1px solid var(--border); background:var(--bg3); }
+.swap-thumb-sw { width:52px; height:52px; border-radius:var(--r-sm); border:1px solid var(--border); }
+.swap-name { font-size:.6rem; color:var(--text2); text-align:center; max-width:56px; line-height:1.3; }
+.swap-score { font-size:.58rem; color:var(--acc-text); font-weight:400; }
+
+.stylist-tip { font-size:.78rem; color:var(--text2); line-height:1.6; border-top:1px solid var(--border); padding:.75rem 1rem; font-weight:300; }
+.stylist-tip strong { color:var(--text); font-weight:400; }
+.outfit-top-bar { padding:.75rem 1rem .5rem; display:flex; align-items:center; justify-content:space-between; }
+.outfit-occ-v2 { font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; color:var(--acc-text); background:var(--acc-bg); border:1px solid #C0DCC8; padding:3px 9px; border-radius:var(--r-sm); font-weight:400; }
+
+.colour-loading { padding:1rem; display:flex; align-items:center; gap:8px; font-size:.8rem; color:var(--text2); border-top:1px solid var(--border); }
+
 </style>
 </head>
 <body>
@@ -338,6 +427,8 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
         <div class="w-icon" id="w-icon">·</div>
       </div>
 
+      <div class="sec-title">This week's bottom</div>
+      <div class="pin-section" id="pin-section"></div>
       <div class="sec-title">Occasion</div>
       <div class="occ-row" id="occ-row">
         <div class="occ-chip on" onclick="setOcc('Casual',this)">Casual</div>
@@ -346,15 +437,23 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
         <div class="occ-chip" onclick="setOcc('Formal',this)">Formal</div>
         <div class="occ-chip" onclick="setOcc('Evening out',this)">Evening out</div>
         <div class="occ-chip" onclick="setOcc('Wedding / Function',this)">Wedding / Function</div>
+        <div class="occ-chip" onclick="setMultiOcc(this)">Split day ✦</div>
       </div>
 
-      <div class="sec-title">Today's outfit</div>
+      <div class="wx-warn" id="wx-warn"></div>
+      <div class="sec-title" id="outfit-title">Today's outfit</div>
       <div id="outfit-area"></div>
+      <div class="clash-warn" id="clash-warn"></div>
+      <div id="multi-occ-area"></div>
       <button class="wore-btn" id="wore-btn" onclick="confirmWore()">✓ &nbsp;I wore this today</button>
       <button class="regen-btn" id="regen-btn" onclick="genOutfit()">
         <span class="regen-icon">↺</span> Try another combination
       </button>
 
+      <button class="plan-btn" onclick="planTomorrow()">
+        <span>🌙</span> Plan tomorrow's outfit
+      </button>
+      <div class="plan-tomorrow-card" id="plan-tomorrow-card"></div>
       <button class="regen-btn" onclick="openTrip()" style="margin-bottom:1rem;">
         <span>✈</span> Pack for a trip
       </button>
@@ -462,6 +561,16 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
     <button class="scan-btn" id="trip-gen-btn" onclick="genTrip()">Plan my outfits ↗</button>
     <div class="trip-result" id="trip-result"></div>
   </div>
+</div>
+
+<!-- PIN PICKER SHEET -->
+<div class="overlay" id="pin-overlay" onclick="closePinPicker()"></div>
+<div class="sheet" id="pin-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Pin a bottom</div>
+  <div class="sheet-sub">Pick the jeans or pants you're wearing this week. Saya will suggest different tops each day that pair with it.</div>
+  <div class="pin-grid" id="pin-grid"></div>
+  <button class="scan-btn" style="background:var(--bg);color:var(--text2);border:1px solid var(--border);margin-bottom:.5rem;" onclick="unpinBottom()">No pin — let Saya choose freely</button>
 </div>
 
 <!-- SETTINGS SHEET -->
@@ -694,7 +803,8 @@ async function fetchWeather(){
     document.getElementById('w-temp').textContent=t+'°C';
     document.getElementById('w-desc').textContent=wDesc(c);
     document.getElementById('w-icon').textContent=wIcon(c);
-    window._wx={temp:t,desc:wDesc(c)};
+    window._wx={temp:t,desc:wDesc(c),code:c};
+    renderWeatherWarning(t,c);
   }catch(e){
     document.getElementById('w-temp').textContent='32°C';
     document.getElementById('w-desc').textContent='Hot and humid';
@@ -706,6 +816,25 @@ function wIcon(c){if(c===0)return'☀️';if(c<=2)return'⛅';if(c<=49)return'�
 function wDesc(c){if(c===0)return'Clear sky';if(c<=2)return'Partly cloudy';if(c<=49)return'Foggy';if(c<=69)return'Rainy';return'Thunderstorm';}
 
 // ── OCCASION ──
+function setMultiOcc(el){
+  document.querySelectorAll('.occ-chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  // Show multi-occasion options
+  const area = document.getElementById('multi-occ-area');
+  area.innerHTML='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:.85rem 1rem;margin-bottom:.75rem;">'
+    +'<div style="font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:.65rem;font-weight:400;">Morning occasion</div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.85rem;">'
+    +['Office','Casual','Smart casual','Formal'].map(function(o){return '<div class="trip-chip '+(multiOcc.morning===o?'on':'')+'" onclick="setMorningOcc(this)">'+o+'</div>';}).join('')
+    +'</div>'
+    +'<div style="font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:.65rem;font-weight:400;">Evening occasion</div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.85rem;">'
+    +['Evening out','Casual','Smart casual','Wedding / Function'].map(function(o){return '<div class="trip-chip '+(multiOcc.evening===o?'on':'')+'" onclick="setEveningOcc(this)">'+o+'</div>';}).join('')
+    +'</div>'
+    +'<button class="scan-btn" onclick="genMultiOccasion()">Plan my split day ↗</button>'
+    +'</div>';
+}
+function setMorningOcc(el){multiOcc.morning=el.textContent;el.closest('div').querySelectorAll('.trip-chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+function setEveningOcc(el){multiOcc.evening=el.textContent;el.closest('div').querySelectorAll('.trip-chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
 function setOcc(o,el){
   occ=o;
   document.querySelectorAll('.occ-chip').forEach(c=>c.classList.remove('on'));
@@ -717,16 +846,30 @@ function setOcc(o,el){
 async function genOutfit(){
   const tops=clothes.filter(iTop), bots=clothes.filter(iBot);
   if(!tops.length||!bots.length){renderEmptyOutfit();return;}
-  if(!gemKey){pickRandom(tops,bots);return;}
+
+  // If occasion is formal, ignore pin and choose freely
+  const isFormal = ['Formal','Office'].includes(occ);
+
+  // Use pinned bottom if set and not formal
+  let forcedBot = (!isFormal && pinnedBottom) ? clothes.find(c=>c.id==pinnedBottom.id) : null;
+
+  // Get tops already worn with this pin this week — avoid repeating
+  const wornTops = pinnedBottom && !isFormal ? getWornTopsWithPin() : new Set();
+  let availableTops = tops.filter(t=>!wornTops.has(String(t.id)));
+  if(!availableTops.length) availableTops = tops; // all worn — reset and reuse
+
+  if(!gemKey){pickRandom(availableTops, forcedBot?[forcedBot]:bots);return;}
 
   document.getElementById('outfit-area').innerHTML=`<div class="card" style="padding:1rem;margin-bottom:.75rem;"><div class="skel" style="height:14px;width:60%;margin-bottom:.85rem;"></div><div style="display:flex;gap:8px;margin-bottom:.85rem;"><div class="skel" style="flex:1;aspect-ratio:1;border-radius:var(--r-md);"></div><div style="width:20px;"></div><div class="skel" style="flex:1;aspect-ratio:1;border-radius:var(--r-md);"></div></div><div class="skel" style="height:10px;width:100%;margin-bottom:6px;"></div><div class="skel" style="height:10px;width:75%;"></div></div>`;
   document.getElementById('regen-btn').disabled=true;
 
   const wx=window._wx||{temp:32,desc:'hot and humid'};
   const last=history.length?history[history.length-1]:null;
-  const avoidLine=last?`Avoid repeating: top id ${last.topId}, bottom id ${last.botId}.`:'';
-  const tDesc=tops.map((t,i)=>i+'|id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')+'|'+(t.pattern||'solid')).join('\n');
-  const bDesc=bots.map((b,i)=>i+'|id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type+'|'+(b.fit||'regular')).join('\n');
+  const avoidLine=last?'Avoid repeating top id '+last.topId+' from yesterday.':'';
+  const pinLine = forcedBot ? 'IMPORTANT: The user is wearing '+forcedBot.name+' ('+forcedBot.color+') all week. You MUST use botId:'+forcedBot.id+'. Only choose the best TOP to pair with it.' : '';
+  const wornLine = wornTops.size ? 'Tops already worn with this bottom this week — avoid these top ids: '+[...wornTops].join(', ') : '';
+  const tDesc=availableTops.map((t,i)=>i+'|id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')+'|'+(t.pattern||'solid')).join('\n');
+  const bDesc=(forcedBot?[forcedBot]:bots).map((b,i)=>i+'|id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type+'|'+(b.fit||'regular')).join('\n');
 
   try{
     const res=await callGem(`You are an expert men's stylist based in Kerala, India.
@@ -749,7 +892,8 @@ Respond ONLY as valid JSON, no markdown:
 
 function pickRandom(tops,bots){
   const top=tops[Math.floor(Math.random()*tops.length)];
-  const bot=bots[Math.floor(Math.random()*bots.length)];
+  const botPool = bots && bots.length ? bots : clothes.filter(iBot);
+  const bot=botPool[Math.floor(Math.random()*botPool.length)];
   curOutfit={top,bot,tip:'A clean pairing for the day.',why:'Classic combination.',occ,date:todayStr()};
   renderOutfit(curOutfit);
   saveOutfit(curOutfit);
@@ -757,21 +901,106 @@ function pickRandom(tops,bots){
 }
 
 function renderOutfit(o){
-  const tEl=o.top?.src?`<img class="piece-img" src="${o.top.src}" alt="${o.top.name}"/>`:`<div class="piece-swatch" style="background:${o.top?.hex||'#ccc'}"></div>`;
-  const bEl=o.bot?.src?`<img class="piece-img" src="${o.bot.src}" alt="${o.bot.name}"/>`:`<div class="piece-swatch" style="background:${o.bot?.hex||'#ccc'}"></div>`;
-  document.getElementById('outfit-area').innerHTML=`
-  <div class="card outfit-card">
-    <div class="outfit-top-row">
-      <span style="font-size:.8rem;font-weight:400;color:var(--text);">Complete look</span>
-      <span class="outfit-badge">${o.occ}</span>
-    </div>
-    <div class="pieces-row">
-      <div class="piece">${tEl}<div class="piece-label">${o.top?.name||''}</div></div>
-      <div class="piece-plus">+</div>
-      <div class="piece">${bEl}<div class="piece-label">${o.bot?.name||''}</div></div>
-    </div>
-    <div class="ai-tip"><strong>Tip:</strong> ${o.tip} <span class="ai-why">${o.why}</span></div>
-  </div>`;
+  const tEl = o.top?.src
+    ? '<img class="outfit-piece-img-v2" src="'+o.top.src+'" alt="'+(o.top.name||'')+'" loading="lazy"/>'
+    : '<div class="outfit-piece-sw-v2" style="background:'+(o.top?.hex||'#ccc')+'"></div>';
+  const bEl = o.bot?.src
+    ? '<img class="outfit-piece-img-v2" src="'+o.bot.src+'" alt="'+(o.bot.name||'')+'" loading="lazy"/>'
+    : '<div class="outfit-piece-sw-v2" style="background:'+(o.bot?.hex||'#ccc')+'"></div>';
+
+  document.getElementById('outfit-area').innerHTML =
+    '<div class="outfit-card-v2">'
+    +'<div class="outfit-top-bar"><span style="font-size:.8rem;font-weight:400;color:var(--text);">Complete look</span><span class="outfit-occ-v2">'+o.occ+'</span></div>'
+    +'<div class="outfit-pieces-row">'
+    +'<div class="outfit-piece-v2">'+tEl+'<div class="outfit-piece-name">'+(o.top?.name||'')+'</div></div>'
+    +'<div class="outfit-plus-v2">+</div>'
+    +'<div class="outfit-piece-v2">'+bEl+'<div class="outfit-piece-name">'+(o.bot?.name||'')+'</div></div>'
+    +'</div>'
+    +'<div class="colour-loading" id="colour-loading"><span class="spin">↺</span> Analysing colour match…</div>'
+    +'<div class="colour-verdict" id="colour-verdict" style="display:none;"></div>'
+    +'<div class="stylist-tip"><strong>Tip:</strong> '+(o.tip||'')+' <span class="ai-why">'+(o.why||'')+'</span></div>'
+    +'</div>';
+
+  // Run colour analysis
+  runColourVerdict(o.top, o.bot);
+}
+
+async function runColourVerdict(top, bot){
+  const loading = document.getElementById('colour-loading');
+  const verdict = document.getElementById('colour-verdict');
+  if(!loading || !verdict) return;
+
+  if(!gemKey || !top || !bot){
+    loading.style.display='none';
+    return;
+  }
+
+  // Get other bottoms for swap suggestions
+  const otherBots = clothes.filter(c=>
+    ['jeans','linen-pants','formal-pants','shorts'].includes(c.type) && c.id != bot.id
+  ).slice(0,5);
+
+  try{
+    const prompt = 'You are a mens colour theory expert. Analyse this outfit combination:\n'
+      +'Top: '+top.name+' ('+top.color+(top.fabric?', '+top.fabric:'')+')\n'
+      +'Bottom: '+bot.name+' ('+bot.color+(bot.fabric?', '+bot.fabric:'')+')\n'
+      +'Other available bottoms: '+otherBots.map((b,i)=>'id:'+b.id+'|'+b.name+'|'+b.color).join(', ')+'\n\n'
+      +'Give a detailed colour verdict. Use simple language a non-fashion person can understand.\n'
+      +'Respond ONLY as valid JSON:\n'
+      +'{"verdict":"works or risky or avoid","score":1-10,"theory":"2 sentences explaining WHY these colours work or clash — use simple terms like warm/cool, contrast, complementary etc","confidence":"high or medium or low","swap_ids":[list of bottom ids that would work BETTER with this top, max 3, empty array if current is already great],"swap_reason":"one sentence on why the suggested swaps work better, empty string if no swaps needed"}';
+
+    const res = await callGem(prompt);
+    const p = JSON.parse(res.replace(/```json|```/g,'').trim());
+
+    loading.style.display='none';
+    verdict.style.display='block';
+
+    const badgeClass = p.verdict==='works' ? 'verdict-works' : p.verdict==='risky' ? 'verdict-risky' : 'verdict-avoid';
+    const badgeIcon = p.verdict==='works' ? '✓' : p.verdict==='risky' ? '⚠' : '✗';
+    const badgeText = p.verdict==='works' ? 'Good match' : p.verdict==='risky' ? 'Risky combo' : 'Avoid this';
+
+    // Build swap section if needed
+    let swapHtml = '';
+    if(p.swap_ids && p.swap_ids.length > 0){
+      const swapItems = p.swap_ids.map(id=>{
+        const item = clothes.find(c=>c.id==id);
+        if(!item) return '';
+        const th = item.src
+          ? '<img class="swap-thumb" src="'+item.src+'" alt="'+item.name+'"/>'
+          : '<div class="swap-thumb-sw" style="background:'+(item.hex||'#ccc')+'"></div>';
+        return '<div class="swap-item" onclick="swapBottom('+item.id+')" title="'+item.name+'">'+th+'<div class="swap-name">'+item.name+'</div><div class="swap-score">Better match</div></div>';
+      }).join('');
+      if(swapItems){
+        swapHtml = '<div class="swap-section" style="display:block;margin-top:.65rem;">'
+          +'<div class="swap-title">Better matches for this top</div>'
+          +'<div class="swap-options">'+swapItems+'</div>'
+          +(p.swap_reason ? '<div style="font-size:.72rem;color:var(--text3);margin-top:.5rem;font-weight:300;">'+p.swap_reason+'</div>' : '')
+          +'</div>';
+      }
+    }
+
+    verdict.innerHTML =
+      '<div class="verdict-row">'
+      +'<div class="verdict-badge '+badgeClass+'">'+badgeIcon+' '+badgeText+'</div>'
+      +'<div class="verdict-score">'+p.score+'/10 · '+p.confidence+' confidence</div>'
+      +'</div>'
+      +'<div class="colour-theory"><strong>Why:</strong> '+p.theory+'</div>'
+      +swapHtml;
+
+  }catch(e){
+    loading.style.display='none';
+  }
+}
+
+function swapBottom(id){
+  // Swap the bottom in the current outfit and re-render
+  const newBot = clothes.find(c=>c.id==id);
+  if(!newBot || !curOutfit) return;
+  curOutfit.bot = newBot;
+  curOutfit.tip = 'A better colour match for your top.';
+  curOutfit.why = '';
+  renderOutfit(curOutfit);
+  toast('Swapped to '+newBot.name);
 }
 
 function renderEmptyOutfit(){
@@ -1205,6 +1434,231 @@ Respond ONLY as valid JSON, no markdown:
     document.getElementById('shop-result').innerHTML=`<div style="font-size:.82rem;color:var(--text2);">Analysis failed. Check your API key and try again.</div>`;
   }
   btn.disabled=false;btn.textContent='Analyse my wardrobe ↗';
+}
+
+
+// ── PINNED BOTTOM ──
+let pinnedBottom = null; // {id, name, src, hex, type, color, pinnedDate}
+
+function svPin(){
+  try{ localStorage.setItem('saya_pin', JSON.stringify(pinnedBottom)); }catch(e){}
+}
+function ldPin(){
+  try{
+    const p = localStorage.getItem('saya_pin');
+    pinnedBottom = p ? JSON.parse(p) : null;
+    // Auto-clear pin after 7 days
+    if(pinnedBottom && pinnedBottom.pinnedDate){
+      const days = (Date.now() - pinnedBottom.pinnedDate) / (1000*60*60*24);
+      if(days > 7){ pinnedBottom = null; svPin(); }
+    }
+  }catch(e){ pinnedBottom=null; }
+}
+
+function pinDaysCount(){
+  if(!pinnedBottom || !pinnedBottom.pinnedDate) return 0;
+  return Math.floor((Date.now() - pinnedBottom.pinnedDate) / (1000*60*60*24));
+}
+
+function renderPinSection(){
+  ldPin();
+  const area = document.getElementById('pin-section');
+  if(!area) return;
+  if(!pinnedBottom){
+    area.innerHTML = `<div class="pin-empty">
+      <div class="pin-empty-text">No bottom pinned — tap to set one for the week</div>
+      <button class="pin-set-btn" onclick="openPinPicker()">Pick →</button>
+    </div>`;
+  } else {
+    const days = pinDaysCount();
+    const dayText = days === 0 ? 'Pinned today' : `Pinned ${days} day${days!==1?'s':''} ago`;
+    const thumb = pinnedBottom.src
+      ? `<img class="pin-thumb" src="${pinnedBottom.src}" alt="${pinnedBottom.name}"/>`
+      : `<div class="pin-thumb-sw" style="background:${pinnedBottom.hex||'#ccc'}"></div>`;
+    area.innerHTML = `<div class="pin-card">
+      ${thumb}
+      <div class="pin-info">
+        <div class="pin-label">Pinned this week</div>
+        <div class="pin-name">${pinnedBottom.name}</div>
+        <div class="pin-days">${dayText} · ${pinnedBottom.color||''}</div>
+      </div>
+      <button class="pin-change" onclick="openPinPicker()">Change</button>
+    </div>`;
+  }
+}
+
+function openPinPicker(){
+  const bots = clothes.filter(c=>['jeans','linen-pants','formal-pants','shorts'].includes(c.type));
+  const grid = document.getElementById('pin-grid');
+  if(!bots.length){
+    toast('Add some bottoms to your wardrobe first');
+    return;
+  }
+  grid.innerHTML = bots.map(b=>`
+    <div class="pin-item ${pinnedBottom&&pinnedBottom.id==b.id?'chosen':''}" onclick="setPin(${JSON.stringify(b).replace(/"/g,'&quot;')})">
+      ${b.src?`<img class="pin-item-img" src="${b.src}" alt="${b.name}"/>`:`<div class="pin-item-sw" style="background:${b.hex||'#ccc'}"></div>`}
+      <div class="pin-item-name">${b.name}</div>
+    </div>`).join('');
+  document.getElementById('pin-overlay').classList.add('open');
+  document.getElementById('pin-sheet').classList.add('open');
+}
+
+function closePinPicker(){
+  document.getElementById('pin-overlay').classList.remove('open');
+  document.getElementById('pin-sheet').classList.remove('open');
+}
+
+function setPin(item){
+  pinnedBottom = {...item, pinnedDate: Date.now()};
+  svPin();
+  closePinPicker();
+  renderPinSection();
+  genOutfit(); // regenerate with pinned bottom
+  toast(item.name+' pinned for the week');
+}
+
+function unpinBottom(){
+  pinnedBottom = null;
+  svPin();
+  closePinPicker();
+  renderPinSection();
+  genOutfit();
+  toast('Pin removed — Saya will choose freely');
+}
+
+// ── GET TOPS ALREADY WORN WITH PINNED BOTTOM THIS WEEK ──
+function getWornTopsWithPin(){
+  if(!pinnedBottom) return new Set();
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  return new Set(
+    history
+      .filter(h => h.botId == pinnedBottom.id && new Date(h.date) > weekAgo)
+      .map(h => String(h.topId))
+  );
+}
+
+
+// ── FEATURE: WEATHER FABRIC WARNING ──
+function renderWeatherWarning(temp, code){
+  const warn = document.getElementById('wx-warn');
+  if(!warn) return;
+  const isRain = code >= 51 && code <= 99;
+  const isHot = temp >= 33;
+  const isHumid = isRain || (temp >= 30 && code <= 3);
+
+  if(isRain){
+    warn.style.display='block';
+    warn.innerHTML='<strong>🌧 Rain today</strong> — avoid linen and cotton shirts, they wrinkle badly when wet. Stick to synthetic blends or darker colours that hide moisture.';
+  } else if(isHot && isHumid){
+    warn.style.display='block';
+    warn.innerHTML='<strong>☀️ Hot & humid today ('+temp+'°C)</strong> — linen and loose cotton are your best bet. Avoid dark colours and tight fits — they trap heat.';
+  } else if(isHot){
+    warn.style.display='block';
+    warn.innerHTML='<strong>🌡 '+temp+'°C today</strong> — go for lightweight fabrics. Light colours reflect heat better.';
+  } else {
+    warn.style.display='none';
+  }
+}
+
+// Colour clash replaced by runColourVerdict
+
+// ── FEATURE: PLAN TOMORROW ──
+async function planTomorrow(){
+  const tops=clothes.filter(iTop), bots=clothes.filter(iBot);
+  if(!tops.length||!bots.length){toast('Add clothes to your wardrobe first');return;}
+  const card = document.getElementById('plan-tomorrow-card');
+  card.style.display='block';
+  card.innerHTML='<div style="font-size:.8rem;color:var(--text2);">Checking forecast…</div>';
+
+  // Fetch tomorrow's weather
+  let tmrWx = {temp:32, desc:'hot', code:0};
+  try{
+    const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude='+loc.lat+'&longitude='+loc.lon+'&daily=temperature_2m_max,weathercode&timezone=Asia/Kolkata&forecast_days=2');
+    const d = await r.json();
+    tmrWx = {
+      temp: Math.round(d.daily.temperature_2m_max[1]),
+      code: d.daily.weathercode[1],
+      desc: wDesc(d.daily.weathercode[1])
+    };
+  }catch(e){}
+
+  if(!gemKey){
+    // fallback random
+    const top = tops[Math.floor(Math.random()*tops.length)];
+    const bot = pinnedBottom ? clothes.find(c=>c.id==pinnedBottom.id)||bots[0] : bots[Math.floor(Math.random()*bots.length)];
+    renderTomorrowCard(top, bot, tmrWx, 'A clean combination for tomorrow.', '');
+    return;
+  }
+
+  try{
+    const tDesc=tops.map(t=>'id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')).join('\n');
+    const bDesc=(pinnedBottom?[clothes.find(c=>c.id==pinnedBottom.id)].filter(Boolean):bots).map(b=>'id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type).join('\n');
+    const todayOutfitNote = curOutfit ? 'Today the user wore: top id '+curOutfit.top?.id+', bottom id '+curOutfit.bot?.id+'. Pick something different for tomorrow.' : '';
+    const prompt = 'You are a mens stylist. Plan tomorrows outfit. Tomorrow weather: '+tmrWx.temp+'C, '+tmrWx.desc+'. '+todayOutfitNote+'\nTops:\n'+tDesc+'\nBottoms:\n'+bDesc+'\nRespond ONLY as valid JSON: {"topId":ID,"botId":ID,"tip":"one practical tip for tomorrow including what to iron tonight","why":"one sentence on the colour pairing"}';
+    const res = await callGem(prompt);
+    const p = JSON.parse(res.replace(/```json|```/g,'').trim());
+    const top = clothes.find(c=>c.id==p.topId)||tops[0];
+    const bot = clothes.find(c=>c.id==p.botId)||bots[0];
+    renderTomorrowCard(top, bot, tmrWx, p.tip, p.why);
+  }catch(e){
+    card.innerHTML='<div style="font-size:.8rem;color:var(--text2);">Could not plan tomorrow. Try again.</div>';
+  }
+}
+
+function renderTomorrowCard(top, bot, wx, tip, why){
+  const card = document.getElementById('plan-tomorrow-card');
+  const tEl = top?.src ? '<img class="piece-img" src="'+top.src+'" alt="'+top.name+'" style="border-radius:var(--r-md);border:1px solid var(--border);width:100%;aspect-ratio:1;object-fit:cover;"/>' : '<div style="width:100%;aspect-ratio:1;border-radius:var(--r-md);border:1px solid var(--border);background:'+(top?.hex||'#ccc')+'"></div>';
+  const bEl = bot?.src ? '<img class="piece-img" src="'+bot.src+'" alt="'+bot.name+'" style="border-radius:var(--r-md);border:1px solid var(--border);width:100%;aspect-ratio:1;object-fit:cover;"/>' : '<div style="width:100%;aspect-ratio:1;border-radius:var(--r-md);border:1px solid var(--border);background:'+(bot?.hex||'#ccc')+'"></div>';
+  const saved = JSON.parse(localStorage.getItem('saya_tmr')||'null');
+  const isConfirmed = saved && saved.topId==top?.id && saved.botId==bot?.id;
+  card.innerHTML = '<div class="plan-tomorrow-head"><span style="font-size:.8rem;font-weight:400;color:var(--text);">Tomorrow · '+wIcon(wx.code)+' '+wx.temp+'°C</span><button class="plan-confirm-btn '+(isConfirmed?'confirmed':'')+'" id="tmr-confirm-btn" onclick="confirmTomorrow('+(top?.id)+','+(bot?.id)+')">'+(isConfirmed?"\u2713 Set aside":"Set aside tonight")+'</button></div>'
+    +'<div class="pieces-row" style="display:flex;gap:8px;margin-bottom:.85rem;">'
+    +'<div class="piece" style="flex:1;">'+tEl+'<div class="piece-label" style="font-size:.68rem;color:var(--text2);margin-top:5px;text-align:center;">'+( top?.name||'')+'</div></div>'
+    +'<div class="piece-plus" style="display:flex;align-items:center;justify-content:center;padding-top:28%;color:var(--text3);">+</div>'
+    +'<div class="piece" style="flex:1;">'+bEl+'<div class="piece-label" style="font-size:.68rem;color:var(--text2);margin-top:5px;text-align:center;">'+(bot?.name||'')+'</div></div>'
+    +'</div>'
+    +'<div class="ai-tip"><strong>Tonight:</strong> '+tip+' <span class="ai-why">'+why+'</span></div>';
+  card.style.display='block';
+}
+
+function confirmTomorrow(topId, botId){
+  localStorage.setItem('saya_tmr', JSON.stringify({topId, botId, date: todayStr()}));
+  const btn = document.getElementById('tmr-confirm-btn');
+  if(btn){ btn.textContent='✓ Set aside'; btn.classList.add('confirmed'); }
+  toast('Outfit set aside for tomorrow ✓');
+}
+
+// ── FEATURE: MULTI OCCASION DAY ──
+let multiOcc = {morning: 'Office', evening: 'Evening out'};
+
+async function genMultiOccasion(){
+  const area = document.getElementById('multi-occ-area');
+  const tops=clothes.filter(iTop), bots=clothes.filter(iBot);
+  if(!tops.length||!bots.length||!gemKey) return;
+  area.innerHTML='';
+
+  try{
+    const wx = window._wx||{temp:32,desc:'hot'};
+    const tDesc=tops.map(t=>'id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')).join('\n');
+    const bDesc=bots.map(b=>'id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type).join('\n');
+    const prompt = 'You are a mens stylist in Kerala. The user has two occasions today: morning ('+multiOcc.morning+') and evening ('+multiOcc.evening+'). Weather: '+wx.temp+'C, '+wx.desc+'.\nTops:\n'+tDesc+'\nBottoms:\n'+bDesc+'\nSuggest TWO outfits — one for each occasion. Minimise change effort (e.g. same bottom if possible, just change top).\nRespond ONLY as valid JSON: {"morning":{"topId":ID,"botId":ID},"evening":{"topId":ID,"botId":ID},"change_tip":"one sentence on what to swap and what to keep when transitioning"}';
+    const res = await callGem(prompt);
+    const p = JSON.parse(res.replace(/```json|```/g,'').trim());
+    const mTop=clothes.find(c=>c.id==p.morning.topId), mBot=clothes.find(c=>c.id==p.morning.botId);
+    const eTop=clothes.find(c=>c.id==p.evening.topId), eBot=clothes.find(c=>c.id==p.evening.botId);
+
+    const pieceHtml=(item)=> item?.src
+      ? '<img style="width:44px;height:44px;border-radius:var(--r-sm);object-fit:cover;border:1px solid var(--border);" src="'+item.src+'" alt="'+item.name+'"/>'
+      : '<div style="width:44px;height:44px;border-radius:var(--r-sm);border:1px solid var(--border);background:'+(item?.hex||'#ccc')+'"></div>';
+
+    area.innerHTML='<div class="multi-occ-card">'
+      +'<div class="multi-occ-head"><span class="multi-occ-label">Split day plan</span><span style="font-size:.7rem;color:var(--text3);font-weight:300;">'+multiOcc.morning+' → '+multiOcc.evening+'</span></div>'
+      +'<div class="multi-occ-body">'
+      +'<div class="multi-piece-row"><div class="multi-piece-time">Morning</div><div style="display:flex;gap:6px;align-items:center;">'+pieceHtml(mTop)+'<span style="color:var(--text3);font-size:.9rem;">+</span>'+pieceHtml(mBot)+'<div style="font-size:.7rem;color:var(--text2);margin-left:4px;"><div>'+(mTop?.name||'')+'</div><div style="color:var(--text3);">'+(mBot?.name||'')+'</div></div></div></div>'
+      +'<div class="multi-piece-row"><div class="multi-piece-time">Evening</div><div style="display:flex;gap:6px;align-items:center;">'+pieceHtml(eTop)+'<span style="color:var(--text3);font-size:.9rem;">+</span>'+pieceHtml(eBot)+'<div style="font-size:.7rem;color:var(--text2);margin-left:4px;"><div>'+(eTop?.name||'')+'</div><div style="color:var(--text3);">'+(eBot?.name||'')+'</div></div></div></div>'
+      +'<div class="multi-change-tip">↕ '+p.change_tip+'</div>'
+      +'</div></div>';
+  }catch(e){}
 }
 
 </script>
