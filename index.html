@@ -807,8 +807,15 @@ async function deleteClothFS(id){
 // ── FIRESTORE: save outfit history entry ──
 async function saveHistoryFS(entry){
   try{
-    // Don't store full src in history — just hex and names to save space
-    const lean = {...entry, topSrc:null, botSrc:null};
+    // Compress photos to tiny thumbnails for history (~10KB each)
+    let topThumb = null, botThumb = null;
+    if(entry.topSrc && entry.topSrc.startsWith('data:image')){
+      topThumb = await compressImage(entry.topSrc, 120, 0.6);
+    }
+    if(entry.botSrc && entry.botSrc.startsWith('data:image')){
+      botThumb = await compressImage(entry.botSrc, 120, 0.6);
+    }
+    const lean = {...entry, topSrc:topThumb, botSrc:botThumb};
     await db.collection('users').doc(USER_ID).collection('history').doc(entry.date).set(lean);
   }catch(e){ console.error('saveHistory error',e); }
 }
