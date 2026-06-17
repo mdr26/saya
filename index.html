@@ -732,7 +732,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 
 <script>
 // ── STATE ──
-let clothes=[], history=[], gemKey='', userName='', occ='Casual', curOutfit=null, queue=[], scanning=false, wFilter='all';
+let clothes=[], history=[], gemKey='', userName='', occ='Casual', curOutfit=null, curOutfitEntry=null, queue=[], scanning=false, wFilter='all';
 let _memKey=''; // in-memory fallback for Safari PWA
 const DEFAULT_LOC={name:'Kayamkulam',lat:9.1833,lon:76.5000};
 let loc=DEFAULT_LOC;
@@ -1020,8 +1020,11 @@ async function genOutfit(){
       colourData:{verdict:p.verdict,score:p.score,theory:p.theory,swap_ids:p.swap_ids||[],swap_reason:p.swap_reason||''}
     };
     saveRecentCombo(String(top.id), String(bot.id));
-    renderOutfit(curOutfit);
     saveOutfit(curOutfit);
+    renderOutfit(curOutfit);
+    // Reset wore button for new suggestion
+    const wb=document.getElementById('wore-btn');
+    if(wb){wb.innerHTML='✓ &nbsp;I wore this today';wb.classList.remove('confirmed');}
   }catch(e){
     console.error('genOutfit error:', e.message, e);
     document.getElementById('outfit-area').innerHTML=
@@ -1148,12 +1151,9 @@ function renderEmptyOutfit(){
 
 // ── SAVE OUTFIT ──
 function saveOutfit(o){
-  const e={date:o.date,topId:o.top?.id,botId:o.bot?.id,topName:o.top?.name,botName:o.bot?.name,topSrc:o.top?.src,botSrc:o.bot?.src,topHex:o.top?.hex,botHex:o.bot?.hex,occ:o.occ};
-  history=history.filter(h=>h.date!==e.date);
-  history.push(e);
-  if(history.length>90)history=history.slice(-90);
-  saveHistoryFS(e);
-  renderRecent();renderCalendar();
+  // Only track in memory — do NOT save to Firebase until user confirms "I wore this"
+  // This prevents auto-saving every suggestion to history
+  curOutfitEntry={date:o.date,topId:o.top?.id,botId:o.bot?.id,topName:o.top?.name,botName:o.bot?.name,topSrc:o.top?.src,botSrc:o.bot?.src,topHex:o.top?.hex,botHex:o.bot?.hex,occ:o.occ};
 }
 
 // ── RECENT ──
@@ -1436,12 +1436,22 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 // ── FEATURE 1: WORE THIS ──
 function confirmWore(){
   const btn=document.getElementById('wore-btn');
-  if(!curOutfit)return;
-  // Mark as confirmed wear in history
-  const entry=history.find(h=>h.date===todayStr());
-  if(entry){entry.confirmed=true;saveHistoryFS(entry);}
-  btn.textContent='✓  Worn today — saved to history';
+  if(!curOutfit||!curOutfitEntry)return;
+  if(btn.classList.contains('confirmed'))return;
+
+  // Save to history array
+  history=history.filter(h=>h.date!==curOutfitEntry.date);
+  history.push(curOutfitEntry);
+  if(history.length>90)history=history.slice(-90);
+
+  // Save to Firebase
+  saveHistoryFS(curOutfitEntry);
+
+  // Update UI
+  btn.innerHTML='✓ &nbsp;Worn today — saved to history';
   btn.classList.add('confirmed');
+  renderRecent();
+  renderCalendar();
   toast('Outfit logged ✓');
 }
 
