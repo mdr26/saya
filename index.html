@@ -465,6 +465,18 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .bot-option-auto { width:58px; height:58px; border-radius:var(--r-md); border:2px solid transparent; background:var(--bg2); border:1px dashed var(--border2); display:flex; align-items:center; justify-content:center; font-size:1.2rem; transition:border-color .13s; }
 .bot-option.selected .bot-option-auto { border-color:var(--acc); border-style:solid; }
 
+
+/* ── ACCESSORIES ── */
+.acc-section { margin-top:.75rem; border-top:1px solid var(--border); padding-top:.85rem; }
+.acc-title { font-size:.65rem; letter-spacing:.12em; text-transform:uppercase; color:var(--text3); font-weight:400; margin-bottom:.65rem; }
+.acc-row { display:flex; gap:10px; flex-wrap:wrap; }
+.acc-piece { display:flex; flex-direction:column; align-items:center; gap:5px; }
+.acc-img { width:52px; height:52px; object-fit:cover; border-radius:var(--r-md); border:1px solid var(--border); background:var(--bg3); display:block; }
+.acc-sw { width:52px; height:52px; border-radius:var(--r-md); border:1px solid var(--border); background:var(--bg3); }
+.acc-label { font-size:.6rem; color:var(--text3); text-align:center; max-width:56px; font-weight:300; }
+.acc-type { font-size:.58rem; color:var(--acc-text); background:var(--acc-bg); padding:2px 5px; border-radius:3px; }
+.acc-loading { font-size:.75rem; color:var(--text3); font-weight:300; font-style:italic; }
+
 </style>
 </head>
 <body>
@@ -785,7 +797,9 @@ function ldLocal(){
     userName = localStorage.getItem('saya_n')||'';
     const sl = localStorage.getItem('saya_loc');
     loc = sl ? JSON.parse(sl) : DEFAULT_LOC;
-  }catch(e){ gemKey=_memKey||''; loc=DEFAULT_LOC; }
+    const rc = localStorage.getItem('saya_recent_combos');
+    recentCombos = rc ? JSON.parse(rc) : [];
+  }catch(e){ gemKey=_memKey||''; loc=DEFAULT_LOC; recentCombos=[]; }
 }
 
 // ── FIRESTORE: save single cloth item ──
@@ -892,6 +906,7 @@ async function finishOb(){
 
 // ── BOOT ──
 function boot(){
+  clearOldWornToday();
   renderGreeting();
   fetchWeather();
   renderWardrobe();
@@ -906,6 +921,7 @@ function boot(){
 
 function iTop(c){return ['t-shirt','casual-shirt','formal-shirt','jacket'].includes(c.type);}
 function iBot(c){return ['jeans','linen-pants','formal-pants','shorts'].includes(c.type);}
+function iAcc(c){return ['shoes','watch','belt','sunglasses','bag'].includes(c.type);}
 function todayStr(){return new Date().toISOString().split('T')[0];}
 function fmtDate(ds){const d=new Date(ds+'T00:00:00');return d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});}
 
@@ -980,19 +996,78 @@ async function genOutfit(){
   // - Otherwise → use selected bottom or auto
   const forcedBot = (!isEvent && selectedBot) ? selectedBot : null;
 
-  // Available tops — exclude recently worn with this bottom this week
-  const wornTopsThisWeek = forcedBot ? getWornTopsWithBottom(forcedBot.id) : new Set();
-  let availableTops = tops.filter(t=>!wornTopsThisWeek.has(String(t.id)));
-  if(!availableTops.length){ availableTops = tops; } // all worn — reset
+  // ── ROTATION LOGIC ──
+  // Priority of exclusions:
+  // 1. Worn today (confirmed) — NEVER repeat today, no exceptions
+  // 2. Shown in current rotation — exclude until all tops exhausted
+  // 3. Once all tops shown — start new cycle (but still block worn today)
 
-  // Available bottoms for Saya to choose from
+  const wornTodayTops = forcedBot ? getWornTodayTops(forcedBot.id) : getWornTodayAuto();
+  const shownInRotation = forcedBot ? getRecentTopsWithBottom(forcedBot.id) : getRecentTopsAuto();
+
+  // Available bottoms
   const availableBots = forcedBot ? [forcedBot] : bots;
 
-  // Filter out recently shown combos to break loops
-  const freshTops = availableTops.filter(t=>
-    availableBots.some(b=>!wasRecentlyShown(String(t.id), String(b.id)))
-  );
-  if(freshTops.length > 0) availableTops = freshTops;
+  if(forcedBot){
+    // ── BOTTOM SELECTED MODE ──
+    // Exclude worn today first (hard block)
+    const notWornToday = tops.filter(t=>!wornTodayTops.has(String(t.id)));
+
+    if(!notWornToday.length){
+      // All tops worn today with this bottom — show message
+      document.getElementById('outfit-area').innerHTML=
+        '<div class="card" style="padding:1.25rem;margin-bottom:.75rem;text-align:center;">'
+        +'<div style="font-size:1.5rem;margin-bottom:.75rem;">👔</div>'
+        +'<div style="font-size:.88rem;font-weight:400;color:var(--text);margin-bottom:.4rem;">All tops worn today</div>'
+        +"<div style='font-size:.8rem;color:var(--text2);font-weight:300;line-height:1.6;'>You have worn every top with this bottom today. Try selecting a different bottom.</div>"
+        +'</div>';
+      document.getElementById('regen-btn').disabled=false;
+      return;
+    }
+
+    // From remaining — exclude already shown in this rotation
+    let availableTops = notWornToday.filter(t=>!shownInRotation.has(String(t.id)));
+
+    if(!availableTops.length){
+      // Full rotation complete — start new cycle, only keep worn today blocked
+      clearRotationForBot(forcedBot.id);
+      availableTops = notWornToday;
+      toast('Starting new rotation — all tops cycled through');
+    }
+
+    if(!gemKey){pickRandom(availableTops, availableBots);return;}
+    // Continue with availableTops for prompt below
+
+    var tDesc=availableTops.map((t,i)=>i+'|id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')+'|'+(t.pattern||'solid')).join('\n');
+    var bDesc=availableBots.map((b,i)=>i+'|id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type+'|'+(b.fit||'regular')).join('\n');
+
+  } else {
+    // ── AUTO MODE ──
+    // Same rotation logic but for full combos (top+bottom pairs)
+    const shownCombos = new Set(recentCombos);
+    const wornTodaySet = wornTodayTops; // set of topIds worn today
+
+    // All possible combos excluding worn today
+    let availableTops = tops.filter(t=>!wornTodaySet.has(String(t.id)));
+    if(!availableTops.length) availableTops = tops; // edge case
+
+    // Exclude recently shown in rotation
+    const freshTops = availableTops.filter(t=>
+      availableBots.some(b=>!shownCombos.has(String(t.id)+'_'+String(b.id)))
+    );
+    if(freshTops.length) availableTops = freshTops;
+    else {
+      // Full rotation — reset recentCombos except worn today
+      recentCombos = [];
+      try{ localStorage.setItem('saya_recent_combos', JSON.stringify(recentCombos)); }catch(e){}
+      toast('Starting new rotation — all outfits cycled through');
+    }
+
+    if(!gemKey){pickRandom(availableTops, availableBots);return;}
+
+    var tDesc=availableTops.map((t,i)=>i+'|id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')+'|'+(t.pattern||'solid')).join('\n');
+    var bDesc=availableBots.map((b,i)=>i+'|id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type+'|'+(b.fit||'regular')).join('\n');
+  }
 
   if(!gemKey){pickRandom(availableTops, availableBots);return;}
 
@@ -1002,10 +1077,7 @@ async function genOutfit(){
   const wx=window._wx||{temp:32,desc:'hot and humid'};
   const last=history.length?history[history.length-1]:null;
   const avoidLine=last?'Avoid repeating top id '+last.topId+' from yesterday.':'';
-  const pinLine = forcedBot ? 'IMPORTANT: The user is wearing '+forcedBot.name+' ('+forcedBot.color+') all week. You MUST use botId:'+forcedBot.id+'. Only choose the best TOP to pair with it.' : '';
-  const wornLine = wornTopsThisWeek.size ? 'Tops already worn this week — avoid: '+[...wornTopsThisWeek].join(', ') : '';
-  const tDesc=availableTops.map((t,i)=>i+'|id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')+'|'+(t.pattern||'solid')).join('\n');
-  const bDesc=(forcedBot?[forcedBot]:bots).map((b,i)=>i+'|id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type+'|'+(b.fit||'regular')).join('\n');
+
 
   try{
     const recentNote = recentCombos.slice(0,8).length ? 'STRICTLY AVOID these recently shown combos (topId_botId): '+recentCombos.slice(0,8).join(', ')+'. Pick a different combination.' : '';
@@ -1073,6 +1145,7 @@ function renderOutfit(o){
     +'</div>'
     +'<div class="colour-loading" id="colour-loading" style="'+(o.colourData?'display:none':'')+'"><span class="spin">↺</span> Analysing colour match…</div>'
     +'<div class="colour-verdict" id="colour-verdict" style="'+(o.colourData?'':'display:none')+'"></div>'
+    +'<div class="acc-section"><div class="acc-title">Complete the look</div><div class="acc-row" id="acc-row"><div class="acc-loading">Finding best accessories…</div></div></div>'
     +'<div class="stylist-tip"><strong>Tip:</strong> '+(o.tip||'')+' <span class="ai-why">'+(o.why||'')+'</span></div>'
     +'</div>';
 
@@ -1080,9 +1153,10 @@ function renderOutfit(o){
   if(o.colourData && o.colourData.verdict){
     renderColourVerdict(o.colourData, o.top, o.bot);
   } else {
-    // Fallback: run separate colour call (e.g. after regen without AI)
     runColourVerdict(o.top, o.bot);
   }
+  // Suggest accessories
+  suggestAccessories(o.top, o.bot);
 }
 
 function renderColourVerdict(p, top, bot){
@@ -1191,10 +1265,10 @@ function renderDust(){
 }
 
 // ── WARDROBE ──
-const CATS={'all':'All','t-shirt':'T-shirts','casual-shirt':'Casual shirts','formal-shirt':'Formal shirts','jeans':'Jeans','linen-pants':'Linen pants','formal-pants':'Formal pants','shorts':'Shorts','jacket':'Jackets'};
+const CATS={'all':'All','t-shirt':'T-shirts','casual-shirt':'Casual shirts','formal-shirt':'Formal shirts','jeans':'Jeans','linen-pants':'Linen pants','formal-pants':'Formal pants','shorts':'Shorts','jacket':'Jackets','shoes':'Shoes','watch':'Watches','belt':'Belts','sunglasses':'Sunglasses','bag':'Bags'};
 function renderWardrobe(){
-  const tops=clothes.filter(iTop).length, bots=clothes.filter(iBot).length;
-  document.getElementById('w-stats').innerHTML=[{n:clothes.length,l:'total'},{n:tops,l:'tops'},{n:bots,l:'bottoms'}].map(s=>`<div class="stat-box"><div class="stat-n">${s.n}</div><div class="stat-l">${s.l}</div></div>`).join('');
+  const tops=clothes.filter(iTop).length, bots=clothes.filter(iBot).length, accs=clothes.filter(iAcc).length;
+  document.getElementById('w-stats').innerHTML=[{n:clothes.length,l:'total'},{n:tops,l:'tops'},{n:bots,l:'bottoms'},{n:accs,l:'accessories'}].map(s=>'<div class="stat-box"><div class="stat-n">'+s.n+'</div><div class="stat-l">'+s.l+'</div></div>').join('');
   const types=['all',...new Set(clothes.map(c=>c.type))].filter(k=>CATS[k]);
   document.getElementById('w-filters').innerHTML=types.map(k=>`<div class="f-chip ${wFilter===k?'on':''}" onclick="setWFilter('${k}')">${CATS[k]}</div>`).join('');
   const filtered=wFilter==='all'?clothes:clothes.filter(c=>c.type===wFilter);
@@ -1280,7 +1354,7 @@ async function scanAll(){
       const b64 = compressed.split(',')[1];
       const mime = 'image/jpeg';
 
-      const prompt = 'You are a clothing expert. Look at this clothing item photo carefully. Respond ONLY as valid JSON with no extra text: {"name":"short descriptive name","type":"t-shirt or casual-shirt or formal-shirt or jeans or linen-pants or formal-pants or shorts or jacket","color":"main color name","hex":"hex code like #4A7A5A","fit":"slim or regular or relaxed or oversized","fabric":"e.g. cotton","occasion":"casual or formal or smart-casual or versatile","pattern":"solid or striped or checked or printed or other"}';
+      const prompt = 'You are a fashion expert. Look at this photo carefully. Respond ONLY as valid JSON with no extra text: {"name":"short descriptive name","type":"t-shirt or casual-shirt or formal-shirt or jeans or linen-pants or formal-pants or shorts or jacket or shoes or watch or belt or sunglasses or bag","color":"main color name","hex":"best matching hex code","fit":"slim or regular or relaxed or oversized or n/a","fabric":"e.g. cotton leather canvas or n/a","occasion":"casual or formal or smart-casual or versatile","pattern":"solid or striped or checked or printed or other","style":"e.g. sneakers loafers formal-shoes analog-digital leather-belt etc or n/a"}';
 
       const res = await callGemVision(b64, mime, prompt);
       const cleaned = res.replace(/```json|```/g,'').trim();
@@ -1454,12 +1528,47 @@ function confirmWore(){
   // Save to Firebase
   saveHistoryFS(curOutfitEntry);
 
+  // ── BLOCK this exact outfit from appearing again today ──
+  // Save worn items to localStorage so regen never shows them
+  try{
+    const wornToday = JSON.parse(localStorage.getItem('saya_worn_today')||'[]');
+    wornToday.push({
+      date: todayStr(),
+      topId: String(curOutfitEntry.topId),
+      botId: String(curOutfitEntry.botId)
+    });
+    localStorage.setItem('saya_worn_today', JSON.stringify(wornToday));
+  }catch(e){}
+
   // Update UI
   btn.innerHTML='✓ &nbsp;Worn today — saved to history';
   btn.classList.add('confirmed');
   renderRecent();
   renderCalendar();
   toast('Outfit logged ✓');
+}
+
+// ── GET TOPS WORN TODAY (confirmed) ──
+function getWornTodayTops(botId){
+  try{
+    const wornToday = JSON.parse(localStorage.getItem('saya_worn_today')||'[]');
+    const today = todayStr();
+    return new Set(
+      wornToday
+        .filter(w=>w.date===today && String(w.botId)===String(botId))
+        .map(w=>w.topId)
+    );
+  }catch(e){ return new Set(); }
+}
+
+// ── CLEAR WORN TODAY on new day ──
+function clearOldWornToday(){
+  try{
+    const wornToday = JSON.parse(localStorage.getItem('saya_worn_today')||'[]');
+    const today = todayStr();
+    const fresh = wornToday.filter(w=>w.date===today);
+    localStorage.setItem('saya_worn_today', JSON.stringify(fresh));
+  }catch(e){}
 }
 
 // ── FEATURE 2: CAPSULE WARDROBE SCORE ──
@@ -1685,11 +1794,27 @@ function unpinBottom(){
 // ── GET TOPS WORN WITH A SPECIFIC BOTTOM THIS WEEK ──
 function getWornTopsWithBottom(botId){
   const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
-  return new Set(
+  // From confirmed history
+  const fromHistory = new Set(
     history
-      .filter(h => String(h.botId) == String(botId) && new Date(h.date) > weekAgo)
+      .filter(h => String(h.botId) == String(botId) && new Date(h.date+'T00:00:00') > weekAgo)
       .map(h => String(h.topId))
   );
+  return fromHistory;
+}
+
+// ── GET ALL RECENTLY SHOWN TOPS WITH A SPECIFIC BOTTOM (this session + localStorage) ──
+function getRecentTopsWithBottom(botId){
+  const prefix = 'bot_'+String(botId)+'_top_';
+  const recent = new Set();
+  // From recentCombos — format is topId_botId
+  recentCombos.forEach(combo=>{
+    const parts = combo.split('_');
+    if(parts.length===2 && String(parts[1])===String(botId)){
+      recent.add(String(parts[0]));
+    }
+  });
+  return recent;
 }
 // ── GET TOPS ALREADY WORN WITH PINNED BOTTOM THIS WEEK ──
 function getWornTopsWithPin(){
@@ -1964,6 +2089,97 @@ function selectBot(id){
   // Regenerate outfit
   genOutfit();
   toast(selectedBot ? selectedBot.name+' selected' : 'Saya will choose freely');
+}
+
+// ── CLEAR SESSION COMBOS FOR A BOTTOM (called when switching bottoms) ──
+function clearBotRecentCombos(botId){
+  recentCombos = recentCombos.filter(combo=>{
+    const parts = combo.split('_');
+    return !(parts.length===2 && String(parts[1])===String(botId));
+  });
+  try{ localStorage.setItem('saya_recent_combos', JSON.stringify(recentCombos)); }catch(e){}
+}
+
+
+// ── WORN TODAY HELPERS ──
+function getWornTodayAuto(){
+  try{
+    const wornToday = JSON.parse(localStorage.getItem('saya_worn_today')||'[]');
+    const today = todayStr();
+    return new Set(wornToday.filter(w=>w.date===today).map(w=>w.topId));
+  }catch(e){ return new Set(); }
+}
+
+// ── RECENT TOPS IN AUTO MODE ──
+function getRecentTopsAuto(){
+  const recent = new Set();
+  recentCombos.forEach(combo=>{
+    const parts = combo.split('_');
+    if(parts.length===2) recent.add(parts[0]);
+  });
+  return recent;
+}
+
+// ── CLEAR ROTATION FOR A SPECIFIC BOTTOM ──
+function clearRotationForBot(botId){
+  recentCombos = recentCombos.filter(combo=>{
+    const parts = combo.split('_');
+    return !(parts.length===2 && String(parts[1])===String(botId));
+  });
+  try{ localStorage.setItem('saya_recent_combos', JSON.stringify(recentCombos)); }catch(e){}
+}
+
+
+// ── SUGGEST ACCESSORIES ──
+async function suggestAccessories(top, bot){
+  const accRow = document.getElementById('acc-row');
+  if(!accRow) return;
+
+  const allAcc = clothes.filter(iAcc);
+
+  if(!allAcc.length){
+    accRow.innerHTML = '<div class="acc-loading">Add shoes and accessories to your wardrobe to complete your look.</div>';
+    return;
+  }
+
+  if(!gemKey){
+    // No AI — just show all accessories
+    renderAccessories(allAcc);
+    return;
+  }
+
+  try{
+    const accDesc = allAcc.map(a=>'id:'+a.id+'|'+a.name+'|'+a.color+'|'+a.type+'|'+(a.style||'')).join(', ');
+    const prompt = 'You are a mens stylist. The outfit is: Top: '+top.name+' ('+top.color+'). Bottom: '+bot.name+' ('+bot.color+'). Available accessories: '+accDesc+'. Pick the best 1-3 accessories that complete this look. Prioritise shoes first, then watch, then belt. Respond ONLY as valid JSON: {"ids":[list of accessory ids that work best],"tip":"one sentence on why these accessories complete the look"}';
+    const res = await callGem(prompt);
+    const p = JSON.parse(res.replace(/```json|```/g,'').trim());
+    const suggested = p.ids.map(id=>allAcc.find(a=>String(a.id)==String(id))).filter(Boolean);
+    if(suggested.length) renderAccessories(suggested, p.tip);
+    else renderAccessories(allAcc.slice(0,3));
+  }catch(e){
+    renderAccessories(allAcc.slice(0,3));
+  }
+}
+
+function renderAccessories(items, tip){
+  const accRow = document.getElementById('acc-row');
+  if(!accRow) return;
+
+  const typeIcons = {shoes:'👟', watch:'⌚', belt:'🟫', sunglasses:'🕶', bag:'👜'};
+
+  accRow.innerHTML = items.map(a=>{
+    const thumb = a.src
+      ? '<img class="acc-img" src="'+a.src+'" alt="'+a.name+'" loading="lazy"/>'
+      : '<div class="acc-sw" style="background:'+(a.hex||'#ccc')+'"></div>';
+    return '<div class="acc-piece">'
+      +thumb
+      +'<div class="acc-label">'+(typeIcons[a.type]||'')+' '+a.name+'</div>'
+      +'</div>';
+  }).join('');
+
+  if(tip){
+    accRow.innerHTML += '<div style="width:100%;font-size:.75rem;color:var(--text2);margin-top:.5rem;font-weight:300;line-height:1.5;">'+tip+'</div>';
+  }
 }
 
 </script>
