@@ -718,6 +718,9 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
     <div class="divider" style="margin-top:1rem;"></div>
     <button class="btn-danger" onclick="clearAll()">Clear all data and start over</button>
     <div class="divider" style="margin-top:1rem;"></div>
+    <button class="btn-save" onclick="debugRotation()" style="background:#1a1a2e;width:100%;margin-top:0;">🔍 Debug rotation</button>
+    <div id="debug-out" style="font-size:.72rem;color:var(--text2);margin-top:.75rem;line-height:1.6;white-space:pre-wrap;font-family:monospace;background:var(--bg);padding:.75rem;border-radius:var(--r-md);display:none;"></div>
+    <div class="divider" style="margin-top:1rem;"></div>
     <div class="set-label">Location</div>
     <div class="set-sub">Change when you travel. Weather updates instantly.</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;margin-bottom:8px;">
@@ -2360,6 +2363,53 @@ async function seedRotationFromHistory(){
     }catch(e){ console.error('seedRotation error', e); }
   }
   console.log('Rotation seeded from history for', Object.keys(byBot).length, 'bottoms');
+}
+
+
+async function debugRotation(){
+  const out = document.getElementById('debug-out');
+  out.style.display='block';
+  out.textContent = 'Loading...';
+
+  let txt = '=== HISTORY ===\n';
+  txt += 'Total entries: '+history.length+'\n';
+  history.slice(-10).reverse().forEach(h=>{
+    txt += h.date+': top='+h.topId+' ('+h.topName+') + bot='+h.botId+' ('+h.botName+')\n';
+  });
+
+  txt += '\n=== ROTATION CACHE ===\n';
+  for(const [bid, rot] of Object.entries(rotationCache)){
+    const botName = clothes.find(c=>String(c.id)===bid)?.name||bid;
+    txt += 'Bottom: '+botName+'\n';
+    txt += 'Worn tops: '+[...rot.wornTopIds].map(tid=>clothes.find(c=>String(c.id)===tid)?.name||tid).join(', ')+'\n';
+    txt += 'Cycle: '+rot.cycleCount+'\n\n';
+  }
+
+  txt += '\n=== FIREBASE ROTATION ===\n';
+  try{
+    const snap = await db.collection('users').doc(USER_ID).collection('rotation').get();
+    if(snap.empty){ txt += 'No rotation docs in Firebase!\n'; }
+    else {
+      snap.docs.forEach(doc=>{
+        const botName = clothes.find(c=>String(c.id)===doc.id)?.name||doc.id;
+        const data = doc.data();
+        txt += 'Bottom: '+botName+'\n';
+        txt += 'Worn: '+(data.wornTopIds||[]).map(tid=>clothes.find(c=>String(c.id)===String(tid))?.name||tid).join(', ')+'\n\n';
+      });
+    }
+  }catch(e){ txt += 'Firebase error: '+e.message+'\n'; }
+
+  txt += '\n=== WORN TODAY ===\n';
+  try{
+    const wt = JSON.parse(localStorage.getItem('saya_worn_today')||'[]');
+    wt.forEach(w=> txt += w.date+': top='+w.topId+' bot='+w.botId+'\n');
+    if(!wt.length) txt += 'Nothing worn today\n';
+  }catch(e){}
+
+  txt += '\n=== SELECTED BOTTOM ===\n';
+  txt += selectedBot ? selectedBot.name+' (id:'+selectedBot.id+')' : 'Auto (none selected)';
+
+  out.textContent = txt;
 }
 
 </script>
