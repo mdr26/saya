@@ -925,7 +925,7 @@ function boot(){
 
 function iTop(c){return ['t-shirt','casual-shirt','formal-shirt','jacket'].includes(c.type);}
 function iBot(c){return ['jeans','linen-pants','formal-pants','shorts'].includes(c.type);}
-function iAcc(c){return ['shoes','watch','belt','sunglasses','bag'].includes(c.type);}
+function iAcc(c){return ['shoes','watch','belt','sunglasses','bag','bracelet','ring','chain','necklace'].includes(c.type);}
 function todayStr(){return new Date().toISOString().split('T')[0];}
 function fmtDate(ds){const d=new Date(ds+'T00:00:00');return d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});}
 
@@ -1295,7 +1295,7 @@ function renderDust(){
 }
 
 // ── WARDROBE ──
-const CATS={'all':'All','t-shirt':'T-shirts','casual-shirt':'Casual shirts','formal-shirt':'Formal shirts','jeans':'Jeans','linen-pants':'Linen pants','formal-pants':'Formal pants','shorts':'Shorts','jacket':'Jackets','shoes':'Shoes','watch':'Watches','belt':'Belts','sunglasses':'Sunglasses','bag':'Bags'};
+const CATS={'all':'All','t-shirt':'T-shirts','casual-shirt':'Casual shirts','formal-shirt':'Formal shirts','jeans':'Jeans','linen-pants':'Linen pants','formal-pants':'Formal pants','shorts':'Shorts','jacket':'Jackets','shoes':'Shoes','watch':'Watches','belt':'Belts','sunglasses':'Sunglasses','bag':'Bags','bracelet':'Bracelets','ring':'Rings','chain':'Chains','necklace':'Necklaces'};
 function renderWardrobe(){
   const tops=clothes.filter(iTop).length, bots=clothes.filter(iBot).length, accs=clothes.filter(iAcc).length;
   document.getElementById('w-stats').innerHTML=[{n:clothes.length,l:'total'},{n:tops,l:'tops'},{n:bots,l:'bottoms'},{n:accs,l:'accessories'}].map(s=>'<div class="stat-box"><div class="stat-n">'+s.n+'</div><div class="stat-l">'+s.l+'</div></div>').join('');
@@ -1384,7 +1384,7 @@ async function scanAll(){
       const b64 = compressed.split(',')[1];
       const mime = 'image/jpeg';
 
-      const prompt = 'You are a fashion expert. Look at this photo carefully. Respond ONLY as valid JSON with no extra text: {"name":"short descriptive name","type":"t-shirt or casual-shirt or formal-shirt or jeans or linen-pants or formal-pants or shorts or jacket or shoes or watch or belt or sunglasses or bag","color":"main color name","hex":"best matching hex code","fit":"slim or regular or relaxed or oversized or n/a","fabric":"e.g. cotton leather canvas or n/a","occasion":"casual or formal or smart-casual or versatile","pattern":"solid or striped or checked or printed or other","style":"e.g. sneakers loafers formal-shoes analog-digital leather-belt etc or n/a"}';
+      const prompt = 'You are a fashion expert. Look at this photo carefully. Respond ONLY as valid JSON with no extra text: {"name":"short descriptive name","type":"t-shirt or casual-shirt or formal-shirt or jeans or linen-pants or formal-pants or shorts or jacket or shoes or watch or belt or sunglasses or bag or bracelet or ring or chain or necklace","color":"main color name","hex":"best matching hex code","fit":"slim or regular or relaxed or oversized or n/a","fabric":"e.g. cotton leather canvas silver gold beaded or n/a","occasion":"casual or formal or smart-casual or versatile","pattern":"solid or other","style":"e.g. sneakers loafers formal-shoes analog-digital leather-belt gold-chain silver-ring beaded-bracelet etc"}';
 
       const res = await callGemVision(b64, mime, prompt);
       const cleaned = res.replace(/```json|```/g,'').trim();
@@ -2192,50 +2192,131 @@ async function suggestAccessories(top, bot){
   if(!accRow) return;
 
   const allAcc = clothes.filter(iAcc);
-
   if(!allAcc.length){
     accRow.innerHTML = '<div class="acc-loading">Add shoes and accessories to your wardrobe to complete your look.</div>';
     return;
   }
 
-  if(!gemKey){
-    // No AI — just show all accessories
-    renderAccessories(allAcc);
-    return;
-  }
+  if(!gemKey){ renderAccessories(groupAccessories(allAcc)); return; }
 
   try{
-    const accDesc = allAcc.map(a=>'id:'+a.id+'|'+a.name+'|'+a.color+'|'+a.type+'|'+(a.style||'')).join(', ');
-    const prompt = 'You are a mens stylist. The outfit is: Top: '+top.name+' ('+top.color+'). Bottom: '+bot.name+' ('+bot.color+'). Available accessories: '+accDesc+'. Pick the best 1-3 accessories that complete this look. Prioritise shoes first, then watch, then belt. Respond ONLY as valid JSON: {"ids":[list of accessory ids that work best],"tip":"one sentence on why these accessories complete the look"}';
+    // Group by type so AI can pick best from each category
+    const shoes = allAcc.filter(a=>a.type==='shoes');
+    const watches = allAcc.filter(a=>a.type==='watch');
+    const belts = allAcc.filter(a=>a.type==='belt');
+    const bracelets = allAcc.filter(a=>a.type==='bracelet');
+    const rings = allAcc.filter(a=>a.type==='ring');
+    const chains = allAcc.filter(a=>['chain','necklace'].includes(a.type));
+    const others = allAcc.filter(a=>['sunglasses','bag'].includes(a.type));
+
+    const accDesc = allAcc.map(a=>'id:'+a.id+'|'+a.name+'|'+a.color+'|'+a.type+'|'+(a.style||'')).join('\n');
+
+    const prompt = 'You are an expert mens stylist. Complete this outfit with accessories:\n'
+      +'Top: '+top.name+' ('+top.color+', '+top.type+')\n'
+      +'Bottom: '+bot.name+' ('+bot.color+', '+bot.type+')\n\n'
+      +'Available accessories:\n'+accDesc+'\n\n'
+      +'Rules:\n'
+      +'1. Pick EXACTLY ONE pair of shoes (mandatory if available)\n'
+      +'2. Pick ONE watch if available\n'
+      +'3. For jewellery (bracelets, rings, chains) — pick ALL that work together for a layered look. Multiple bracelets, rings and chains can be worn together\n'
+      +'4. Pick belt only if outfit needs one\n'
+      +'5. Consider metal tones — gold with gold, silver with silver\n'
+      +'6. Match the vibe — casual outfit = casual accessories\n\n'
+      +'Respond ONLY as valid JSON:\n'
+      +'{"shoes_id":id_or_null,"watch_id":id_or_null,"jewellery_ids":[all bracelet/ring/chain ids that work together],"other_ids":[sunglasses/bag ids if relevant],"shoes_tip":"why this shoe works","jewellery_tip":"how to layer the jewellery"}';
+
     const res = await callGem(prompt);
     const p = JSON.parse(res.replace(/```json|```/g,'').trim());
-    const suggested = p.ids.map(id=>allAcc.find(a=>String(a.id)==String(id))).filter(Boolean);
-    if(suggested.length) renderAccessories(suggested, p.tip);
-    else renderAccessories(allAcc.slice(0,3));
+
+    const result = {
+      shoes: p.shoes_id ? allAcc.find(a=>String(a.id)==String(p.shoes_id)) : null,
+      watch: p.watch_id ? allAcc.find(a=>String(a.id)==String(p.watch_id)) : null,
+      jewellery: (p.jewellery_ids||[]).map(id=>allAcc.find(a=>String(a.id)==String(id))).filter(Boolean),
+      others: (p.other_ids||[]).map(id=>allAcc.find(a=>String(a.id)==String(id))).filter(Boolean),
+      shoesTip: p.shoes_tip||'',
+      jewelleryTip: p.jewellery_tip||''
+    };
+    renderAccessoriesGrouped(result);
   }catch(e){
-    renderAccessories(allAcc.slice(0,3));
+    renderAccessories(groupAccessories(allAcc));
   }
 }
 
-function renderAccessories(items, tip){
+function groupAccessories(allAcc){
+  return {
+    shoes: allAcc.find(a=>a.type==='shoes')||null,
+    watch: allAcc.find(a=>a.type==='watch')||null,
+    jewellery: allAcc.filter(a=>['bracelet','ring','chain','necklace'].includes(a.type)),
+    others: allAcc.filter(a=>['sunglasses','bag','belt'].includes(a.type)),
+    shoesTip:'', jewelleryTip:''
+  };
+}
+
+function renderAccessoriesGrouped(data){
   const accRow = document.getElementById('acc-row');
   if(!accRow) return;
 
-  const typeIcons = {shoes:'👟', watch:'⌚', belt:'🟫', sunglasses:'🕶', bag:'👜'};
+  const thumb = (a,size)=>{
+    const s = size||52;
+    return a.src
+      ? '<img style="width:'+s+'px;height:'+s+'px;object-fit:cover;border-radius:var(--r-md);border:1px solid var(--border);" src="'+a.src+'" alt="'+a.name+'" loading="lazy"/>'
+      : '<div style="width:'+s+'px;height:'+s+'px;border-radius:var(--r-md);border:1px solid var(--border);background:'+(a.hex||'#ccc')+'"></div>';
+  };
 
-  accRow.innerHTML = items.map(a=>{
-    const thumb = a.src
-      ? '<img class="acc-img" src="'+a.src+'" alt="'+a.name+'" loading="lazy"/>'
-      : '<div class="acc-sw" style="background:'+(a.hex||'#ccc')+'"></div>';
-    return '<div class="acc-piece">'
-      +thumb
-      +'<div class="acc-label">'+(typeIcons[a.type]||'')+' '+a.name+'</div>'
-      +'</div>';
-  }).join('');
+  let html = '<div style="width:100%;display:flex;flex-direction:column;gap:.75rem;">';
 
-  if(tip){
-    accRow.innerHTML += '<div style="width:100%;font-size:.75rem;color:var(--text2);margin-top:.5rem;font-weight:300;line-height:1.5;">'+tip+'</div>';
+  // Shoes
+  if(data.shoes){
+    html += '<div style="display:flex;align-items:center;gap:.75rem;">'
+      +thumb(data.shoes, 52)
+      +'<div><div style="font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:2px;">Shoes</div>'
+      +'<div style="font-size:.78rem;font-weight:400;color:var(--text);">'+data.shoes.name+'</div>'
+      +(data.shoesTip?'<div style="font-size:.72rem;color:var(--text2);margin-top:2px;font-weight:300;">'+data.shoesTip+'</div>':'')
+      +'</div></div>';
   }
+
+  // Watch
+  if(data.watch){
+    html += '<div style="display:flex;align-items:center;gap:.75rem;">'
+      +thumb(data.watch, 52)
+      +'<div><div style="font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:2px;">Watch</div>'
+      +'<div style="font-size:.78rem;font-weight:400;color:var(--text);">'+data.watch.name+'</div></div></div>';
+  }
+
+  // Jewellery — layered
+  if(data.jewellery && data.jewellery.length){
+    html += '<div><div style="font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:.5rem;">Jewellery — layer these</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">'
+      +data.jewellery.map(a=>'<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">'
+        +thumb(a, 44)
+        +'<div style="font-size:.6rem;color:var(--text2);text-align:center;max-width:50px;">'+a.name+'</div></div>'
+      ).join('')
+      +'</div>'
+      +(data.jewelleryTip?'<div style="font-size:.72rem;color:var(--text2);margin-top:.5rem;font-weight:300;">'+data.jewelleryTip+'</div>':'')
+      +'</div>';
+  }
+
+  // Others
+  if(data.others && data.others.length){
+    html += '<div style="display:flex;gap:8px;">'
+      +data.others.map(a=>'<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">'
+        +thumb(a, 44)
+        +'<div style="font-size:.6rem;color:var(--text2);text-align:center;max-width:50px;">'+a.name+'</div></div>'
+      ).join('')
+      +'</div>';
+  }
+
+  if(!data.shoes && !data.watch && (!data.jewellery||!data.jewellery.length) && (!data.others||!data.others.length)){
+    html += '<div class="acc-loading">No matching accessories found.</div>';
+  }
+
+  html += '</div>';
+  accRow.innerHTML = html;
+}
+
+// Keep old renderAccessories as fallback
+function renderAccessories(data){
+  renderAccessoriesGrouped(data);
 }
 
 
