@@ -1010,38 +1010,33 @@ async function genOutfit(){
 
   if(forcedBot){
     // ── BOTTOM SELECTED MODE ──
-    // Hard block: worn today OR worn this week with this bottom
-    const wornThisWeek = getWornTopsWithBottom(forcedBot.id);
-    const hardBlock = new Set([...wornTodayTops, ...wornThisWeek]);
-    const notWornToday = tops.filter(t=>!hardBlock.has(String(t.id)));
-    console.log('Available after hard block:', notWornToday.map(t=>t.name));
+    // Step 1: Get unworn tops from rotation engine
+    let unwornTops = await getUnwornTopsForBot(forcedBot.id);
 
-    if(!notWornToday.length){
-      // All tops worn today with this bottom — show message
-      document.getElementById('outfit-area').innerHTML=
-        '<div class="card" style="padding:1.25rem;margin-bottom:.75rem;text-align:center;">'
-        +'<div style="font-size:1.5rem;margin-bottom:.75rem;">👔</div>'
-        +'<div style="font-size:.88rem;font-weight:400;color:var(--text);margin-bottom:.4rem;">All tops worn today</div>'
-        +"<div style='font-size:.8rem;color:var(--text2);font-weight:300;line-height:1.6;'>You have worn every top with this bottom today. Try selecting a different bottom.</div>"
-        +'</div>';
-      document.getElementById('regen-btn').disabled=false;
-      return;
+    // Step 2: Also exclude worn today (hard block regardless of rotation)
+    unwornTops = unwornTops.filter(t=>!wornTodayTops.has(String(t.id)));
+
+    // Step 3: If all tops worn in rotation — rotation engine resets automatically
+    // getUnwornTopsForBot returns all tops when cycle is complete
+    if(!unwornTops.length){
+      // Edge case: all tops worn today too — show message
+      const allTopsMinusToday = tops.filter(t=>!wornTodayTops.has(String(t.id)));
+      if(!allTopsMinusToday.length){
+        document.getElementById('outfit-area').innerHTML=
+          '<div class="card" style="padding:1.25rem;margin-bottom:.75rem;text-align:center;">'
+          +'<div style="font-size:1.5rem;margin-bottom:.75rem;">👔</div>'
+          +'<div style="font-size:.88rem;font-weight:400;color:var(--text);margin-bottom:.4rem;">All tops worn today</div>'
+          +'<div style="font-size:.8rem;color:var(--text2);font-weight:300;line-height:1.6;">You have worn every top today. Come back tomorrow!</div>'
+          +'</div>';
+        document.getElementById('regen-btn').disabled=false;
+        return;
+      }
+      unwornTops = allTopsMinusToday;
     }
 
-    // From remaining — exclude already shown in this rotation
-    let availableTops = notWornToday.filter(t=>!shownInRotation.has(String(t.id)));
+    if(!gemKey){pickRandom(unwornTops, availableBots);return;}
 
-    if(!availableTops.length){
-      // Full rotation complete — start new cycle, only keep worn today blocked
-      clearRotationForBot(forcedBot.id);
-      availableTops = notWornToday;
-      toast('Starting new rotation — all tops cycled through');
-    }
-
-    if(!gemKey){pickRandom(availableTops, availableBots);return;}
-    // Continue with availableTops for prompt below
-
-    var tDesc=availableTops.map((t,i)=>i+'|id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')+'|'+(t.pattern||'solid')).join('\n');
+    var tDesc=unwornTops.map((t,i)=>i+'|id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')+'|'+(t.pattern||'solid')).join('\n');
     var bDesc=availableBots.map((b,i)=>i+'|id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type+'|'+(b.fit||'regular')).join('\n');
 
   } else {
@@ -1096,6 +1091,34 @@ async function genOutfit(){
       +'\n\nRespond ONLY as valid JSON: {"topId":ID,"botId":ID,"tip":"2-sentence practical tip","why":"one sentence on colour pairing","verdict":"works or risky or avoid","score":1-10,"theory":"2 sentences in simple language why colours work or clash","swap_ids":[],"swap_reason":""}';
     const res = await callGem(fullPrompt);
     const p=JSON.parse(res.replace(/```json|```/g,'').trim());
+
+    // ── Rule 3: If score below 8 and bottom was user-selected ──
+    // Suggest a better bottom instead
+    if(forcedBot && p.score && p.score < 8){
+      // Find best matching bottom for this top from all bottoms
+      const bestBotPrompt = 'The user wants to wear top id:'+p.topId+' ('+tops.find(t=>t.id==p.topId)?.name+', '+tops.find(t=>t.id==p.topId)?.color+'). Their selected bottom '+forcedBot.name+' ('+forcedBot.color+') scores only '+p.score+'/10. From these bottoms, which 2 would match better? '+bots.map(b=>'id:'+b.id+'|'+b.name+'|'+b.color).join(', ')+'. Respond ONLY as JSON: {"ids":[id1,id2],"reason":"one sentence why these work better"}';
+      try{
+        const bestRes = await callGem(bestBotPrompt);
+        const bestP = JSON.parse(bestRes.replace(/```json|```/g,'').trim());
+        const betterBots = (bestP.ids||[]).map(id=>clothes.find(c=>String(c.id)==String(id))).filter(Boolean);
+        if(betterBots.length){
+          const thumbs = betterBots.map(b=>b.src
+            ? '<img style="width:44px;height:44px;border-radius:var(--r-sm);object-fit:cover;border:1px solid var(--border);cursor:pointer;" src="'+b.src+'" onclick="selectBotById('+b.id+')" title="'+b.name+'"/>'
+            : '<div style="width:44px;height:44px;border-radius:var(--r-sm);background:'+(b.hex||'#ccc')+';border:1px solid var(--border);cursor:pointer;" onclick="selectBotById('+b.id+')" title="'+b.name+'"></div>'
+          ).join('');
+          document.getElementById('outfit-area').innerHTML=
+            '<div class="card" style="padding:1.1rem;margin-bottom:.75rem;">'
+            +'<div style="font-size:.8rem;font-weight:400;color:var(--text);margin-bottom:.5rem;">⚠️ Poor colour match with '+forcedBot.name+'</div>'
+            +'<div style="font-size:.8rem;color:var(--text2);font-weight:300;line-height:1.6;margin-bottom:.75rem;">'+bestP.reason+'</div>'
+            +'<div style="font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:.5rem;">Try one of these instead</div>'
+            +'<div style="display:flex;gap:8px;align-items:center;">'+thumbs+'</div>'
+            +'</div>';
+          document.getElementById('regen-btn').disabled=false;
+          return;
+        }
+      }catch(e){}
+    }
+
     const top=clothes.find(c=>c.id==p.topId)||tops[0];
     const bot=clothes.find(c=>c.id==p.botId)||bots[0];
     curOutfit={top,bot,tip:p.tip,why:p.why,occ,date:todayStr(),
@@ -1532,7 +1555,6 @@ function confirmWore(){
   saveHistoryFS(curOutfitEntry);
 
   // ── BLOCK this exact outfit from appearing again today ──
-  // Save worn items to localStorage so regen never shows them
   try{
     const wornToday = JSON.parse(localStorage.getItem('saya_worn_today')||'[]');
     wornToday.push({
@@ -1542,6 +1564,8 @@ function confirmWore(){
     });
     localStorage.setItem('saya_worn_today', JSON.stringify(wornToday));
   }catch(e){}
+  // ── UPDATE ROTATION ──
+  markRotationOnWear(curOutfitEntry.topId, curOutfitEntry.botId);
 
   // Update UI
   btn.innerHTML='✓ &nbsp;Worn today — saved to history';
@@ -2098,6 +2122,13 @@ function renderBotSelector(){
   scroll.innerHTML = html;
 }
 
+function selectBotById(id){
+  const item = clothes.find(c=>c.id==id);
+  if(!item) return;
+  selectedBot = item;
+  renderBotSelector();
+  genOutfit();
+}
 function selectBot(id){
   if(id === null){
     selectedBot = null;
@@ -2201,6 +2232,74 @@ function renderAccessories(items, tip){
   if(tip){
     accRow.innerHTML += '<div style="width:100%;font-size:.75rem;color:var(--text2);margin-top:.5rem;font-weight:300;line-height:1.5;">'+tip+'</div>';
   }
+}
+
+
+// ── ROTATION ENGINE ──
+// Tracks which tops have been worn with each bottom
+// Full cycle must complete before any top repeats with same bottom
+
+let rotationCache = {}; // {botId: {wornTopIds: Set, loaded: bool}}
+
+async function loadRotationForBot(botId){
+  const sid = String(botId);
+  if(rotationCache[sid] && rotationCache[sid].loaded) return;
+  try{
+    const doc = await db.collection('users').doc(USER_ID).collection('rotation').doc(sid).get();
+    if(doc.exists){
+      const data = doc.data();
+      rotationCache[sid] = {
+        wornTopIds: new Set((data.wornTopIds||[]).map(String)),
+        cycleCount: data.cycleCount||0,
+        loaded: true
+      };
+    } else {
+      rotationCache[sid] = {wornTopIds: new Set(), cycleCount: 0, loaded: true};
+    }
+  }catch(e){
+    rotationCache[sid] = {wornTopIds: new Set(), cycleCount: 0, loaded: true};
+  }
+}
+
+async function markTopWornWithBot(topId, botId){
+  const sid = String(botId);
+  const tid = String(topId);
+  await loadRotationForBot(sid);
+  const rot = rotationCache[sid];
+  rot.wornTopIds.add(tid);
+
+  // Check if full cycle complete
+  const totalTops = clothes.filter(iTop).length;
+  if(rot.wornTopIds.size >= totalTops){
+    // Cycle complete — reset
+    rot.wornTopIds = new Set([tid]); // keep current as first of new cycle
+    rot.cycleCount = (rot.cycleCount||0) + 1;
+    toast('Full rotation complete! Starting new cycle 🔄');
+  }
+
+  // Save to Firestore
+  try{
+    await db.collection('users').doc(USER_ID).collection('rotation').doc(sid).set({
+      wornTopIds: [...rot.wornTopIds],
+      cycleCount: rot.cycleCount,
+      updatedAt: new Date().toISOString()
+    });
+  }catch(e){ console.error('rotation save error', e); }
+}
+
+async function getUnwornTopsForBot(botId){
+  const sid = String(botId);
+  await loadRotationForBot(sid);
+  const rot = rotationCache[sid];
+  const allTops = clothes.filter(iTop);
+  const unworn = allTops.filter(t=>!rot.wornTopIds.has(String(t.id)));
+  console.log('Rotation for bot '+sid+': worn='+rot.wornTopIds.size+'/'+allTops.length+', unworn='+unworn.length);
+  return unworn;
+}
+
+// Also mark when confirmWore is called
+async function markRotationOnWear(topId, botId){
+  await markTopWornWithBot(topId, botId);
 }
 
 </script>
