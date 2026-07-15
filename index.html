@@ -1010,8 +1010,11 @@ async function genOutfit(){
 
   if(forcedBot){
     // ── BOTTOM SELECTED MODE ──
-    // Exclude worn today first (hard block)
-    const notWornToday = tops.filter(t=>!wornTodayTops.has(String(t.id)));
+    // Hard block: worn today OR worn this week with this bottom
+    const wornThisWeek = getWornTopsWithBottom(forcedBot.id);
+    const hardBlock = new Set([...wornTodayTops, ...wornThisWeek]);
+    const notWornToday = tops.filter(t=>!hardBlock.has(String(t.id)));
+    console.log('Available after hard block:', notWornToday.map(t=>t.name));
 
     if(!notWornToday.length){
       // All tops worn today with this bottom — show message
@@ -1553,11 +1556,13 @@ function getWornTodayTops(botId){
   try{
     const wornToday = JSON.parse(localStorage.getItem('saya_worn_today')||'[]');
     const today = todayStr();
-    return new Set(
-      wornToday
-        .filter(w=>w.date===today && String(w.botId)===String(botId))
-        .map(w=>w.topId)
-    );
+    const sid = String(botId);
+    const worn = new Set();
+    wornToday.forEach(w=>{
+      if(w.date===today && String(w.botId)===sid) worn.add(String(w.topId));
+    });
+    console.log('Worn today with bottom '+sid+':', [...worn]);
+    return worn;
   }catch(e){ return new Set(); }
 }
 
@@ -1794,13 +1799,29 @@ function unpinBottom(){
 // ── GET TOPS WORN WITH A SPECIFIC BOTTOM THIS WEEK ──
 function getWornTopsWithBottom(botId){
   const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
-  // From confirmed history
-  const fromHistory = new Set(
-    history
-      .filter(h => String(h.botId) == String(botId) && new Date(h.date+'T00:00:00') > weekAgo)
-      .map(h => String(h.topId))
-  );
-  return fromHistory;
+  const sid = String(botId);
+  const worn = new Set();
+  history.forEach(h=>{
+    try{
+      if(String(h.botId)===sid && new Date(h.date+'T00:00:00') > weekAgo){
+        worn.add(String(h.topId));
+      }
+    }catch(e){}
+  });
+  console.log('Worn tops with bottom '+sid+' this week:', [...worn]);
+  return worn;
+}
+
+// ── GET ALL TOPS WORN EVER WITH A SPECIFIC BOTTOM ──
+function getAllWornTopsWithBottom(botId){
+  const sid = String(botId);
+  const worn = new Set();
+  history.forEach(h=>{
+    try{
+      if(String(h.botId)===sid) worn.add(String(h.topId));
+    }catch(e){}
+  });
+  return worn;
 }
 
 // ── GET ALL RECENTLY SHOWN TOPS WITH A SPECIFIC BOTTOM (this session + localStorage) ──
