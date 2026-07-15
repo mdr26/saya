@@ -907,6 +907,7 @@ async function finishOb(){
 // ── BOOT ──
 function boot(){
   clearOldWornToday();
+  seedRotationFromHistory(); // seed rotation from existing history
   renderGreeting();
   fetchWeather();
   renderWardrobe();
@@ -2300,6 +2301,65 @@ async function getUnwornTopsForBot(botId){
 // Also mark when confirmWore is called
 async function markRotationOnWear(topId, botId){
   await markTopWornWithBot(topId, botId);
+}
+
+
+// ── BUILD ROTATION FROM EXISTING HISTORY ──
+// Runs once on boot — seeds rotation engine from all confirmed history
+async function seedRotationFromHistory(){
+  if(!history.length) return;
+  
+  // Group history by botId
+  const byBot = {};
+  history.forEach(h=>{
+    if(!h.botId || !h.topId) return;
+    const bid = String(h.botId);
+    const tid = String(h.topId);
+    if(!byBot[bid]) byBot[bid] = new Set();
+    byBot[bid].add(tid);
+  });
+
+  // For each bottom — check if rotation already exists in Firebase
+  // If not — seed it from history
+  for(const [botId, topIds] of Object.entries(byBot)){
+    if(rotationCache[botId] && rotationCache[botId].loaded) continue;
+    try{
+      const doc = await db.collection('users').doc(USER_ID).collection('rotation').doc(botId).get();
+      if(!doc.exists){
+        // No rotation record — create one from history
+        const allTops = clothes.filter(iTop);
+        const newSet = new Set([...topIds].map(String));
+        // If all tops worn — reset (new cycle)
+        if(newSet.size >= allTops.length){
+          rotationCache[botId] = {wornTopIds: new Set(), cycleCount: 1, loaded: true};
+        } else {
+          rotationCache[botId] = {wornTopIds: newSet, cycleCount: 0, loaded: true};
+        }
+        // Save to Firebase
+        await db.collection('users').doc(USER_ID).collection('rotation').doc(botId).set({
+          wornTopIds: [...rotationCache[botId].wornTopIds],
+          cycleCount: rotationCache[botId].cycleCount,
+          updatedAt: new Date().toISOString()
+        });
+        console.log('Seeded rotation for bot '+botId+': '+[...newSet].length+' tops marked worn');
+      } else {
+        // Already exists — merge any history tops not yet in rotation
+        const data = doc.data();
+        const existing = new Set((data.wornTopIds||[]).map(String));
+        let changed = false;
+        topIds.forEach(tid=>{ if(!existing.has(tid)){ existing.add(tid); changed=true; } });
+        if(changed){
+          rotationCache[botId] = {wornTopIds: existing, cycleCount: data.cycleCount||0, loaded: true};
+          await db.collection('users').doc(USER_ID).collection('rotation').doc(botId).set({
+            wornTopIds: [...existing],
+            cycleCount: data.cycleCount||0,
+            updatedAt: new Date().toISOString()
+          });
+        }
+      }
+    }catch(e){ console.error('seedRotation error', e); }
+  }
+  console.log('Rotation seeded from history for', Object.keys(byBot).length, 'bottoms');
 }
 
 </script>
