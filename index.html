@@ -910,7 +910,7 @@ async function finishOb(){
 // ── BOOT ──
 function boot(){
   clearOldWornToday();
-  seedRotationFromHistory(); // seed rotation from existing history
+  seedGlobalRotationFromHistory(); // seed global rotation from existing history
   renderGreeting();
   fetchWeather();
   renderWardrobe();
@@ -1014,8 +1014,8 @@ async function genOutfit(){
 
   if(forcedBot){
     // ── BOTTOM SELECTED MODE ──
-    // Step 1: Get unworn tops from rotation engine
-    let unwornTops = await getUnwornTopsForBot(forcedBot.id);
+    // Step 1: Get unworn tops from GLOBAL rotation
+    let unwornTops = await getUnwornTopsGlobal();
 
     // Step 2: Also exclude worn today (hard block regardless of rotation)
     unwornTops = unwornTops.filter(t=>!wornTodayTops.has(String(t.id)));
@@ -1568,8 +1568,8 @@ function confirmWore(){
     });
     localStorage.setItem('saya_worn_today', JSON.stringify(wornToday));
   }catch(e){}
-  // ── UPDATE ROTATION ──
-  markRotationOnWear(curOutfitEntry.topId, curOutfitEntry.botId);
+  // ── UPDATE GLOBAL ROTATION ──
+  markTopWornGlobal(curOutfitEntry.topId);
 
   // Update UI
   btn.innerHTML='✓ &nbsp;Worn today — saved to history';
@@ -2239,71 +2239,84 @@ function renderAccessories(items, tip){
 }
 
 
-// ── ROTATION ENGINE ──
-// Tracks which tops have been worn with each bottom
-// Full cycle must complete before any top repeats with same bottom
+// ── GLOBAL ROTATION ENGINE ──
+// Tracks which tops have been worn globally — regardless of bottom
+// Full cycle must complete before any top repeats
 
-let rotationCache = {}; // {botId: {wornTopIds: Set, loaded: bool}}
+let globalRotation = {wornTopIds: new Set(), cycleCount: 0, loaded: false};
 
-async function loadRotationForBot(botId){
-  const sid = String(botId);
-  if(rotationCache[sid] && rotationCache[sid].loaded) return;
+async function loadGlobalRotation(){
+  if(globalRotation.loaded) return;
   try{
-    const doc = await db.collection('users').doc(USER_ID).collection('rotation').doc(sid).get();
+    const doc = await db.collection('users').doc(USER_ID).collection('rotation').doc('global').get();
     if(doc.exists){
       const data = doc.data();
-      rotationCache[sid] = {
+      globalRotation = {
         wornTopIds: new Set((data.wornTopIds||[]).map(String)),
         cycleCount: data.cycleCount||0,
         loaded: true
       };
     } else {
-      rotationCache[sid] = {wornTopIds: new Set(), cycleCount: 0, loaded: true};
+      globalRotation = {wornTopIds: new Set(), cycleCount: 0, loaded: true};
     }
+    console.log('Global rotation loaded: '+globalRotation.wornTopIds.size+' tops worn');
   }catch(e){
-    rotationCache[sid] = {wornTopIds: new Set(), cycleCount: 0, loaded: true};
+    globalRotation = {wornTopIds: new Set(), cycleCount: 0, loaded: true};
   }
 }
 
-async function markTopWornWithBot(topId, botId){
-  const sid = String(botId);
-  const tid = String(topId);
-  await loadRotationForBot(sid);
-  const rot = rotationCache[sid];
-  rot.wornTopIds.add(tid);
-
-  // Check if full cycle complete
-  const totalTops = clothes.filter(iTop).length;
-  if(rot.wornTopIds.size >= totalTops){
-    // Cycle complete — reset
-    rot.wornTopIds = new Set([tid]); // keep current as first of new cycle
-    rot.cycleCount = (rot.cycleCount||0) + 1;
-    toast('Full rotation complete! Starting new cycle 🔄');
-  }
-
-  // Save to Firestore
+async function saveGlobalRotation(){
   try{
-    await db.collection('users').doc(USER_ID).collection('rotation').doc(sid).set({
-      wornTopIds: [...rot.wornTopIds],
-      cycleCount: rot.cycleCount,
+    await db.collection('users').doc(USER_ID).collection('rotation').doc('global').set({
+      wornTopIds: [...globalRotation.wornTopIds],
+      cycleCount: globalRotation.cycleCount,
       updatedAt: new Date().toISOString()
     });
-  }catch(e){ console.error('rotation save error', e); }
+  }catch(e){ console.error('save rotation error', e); }
 }
 
-async function getUnwornTopsForBot(botId){
-  const sid = String(botId);
-  await loadRotationForBot(sid);
-  const rot = rotationCache[sid];
+async function markTopWornGlobal(topId){
+  await loadGlobalRotation();
+  const tid = String(topId);
+  globalRotation.wornTopIds.add(tid);
+
+  const totalTops = clothes.filter(iTop).length;
+  if(globalRotation.wornTopIds.size >= totalTops){
+    // Full cycle complete — reset
+    globalRotation.wornTopIds = new Set([tid]);
+    globalRotation.cycleCount++;
+    toast('Full wardrobe rotation complete! Starting fresh cycle 🔄');
+  }
+  await saveGlobalRotation();
+}
+
+async function getUnwornTopsGlobal(){
+  await loadGlobalRotation();
   const allTops = clothes.filter(iTop);
-  const unworn = allTops.filter(t=>!rot.wornTopIds.has(String(t.id)));
-  console.log('Rotation for bot '+sid+': worn='+rot.wornTopIds.size+'/'+allTops.length+', unworn='+unworn.length);
+  const unworn = allTops.filter(t=>!globalRotation.wornTopIds.has(String(t.id)));
+  console.log('Global rotation: '+globalRotation.wornTopIds.size+' worn, '+unworn.length+' unworn');
   return unworn;
 }
 
-// Also mark when confirmWore is called
-async function markRotationOnWear(topId, botId){
-  await markTopWornWithBot(topId, botId);
+// Seed global rotation from existing history on boot
+async function seedGlobalRotationFromHistory(){
+  await loadGlobalRotation();
+  if(globalRotation.wornTopIds.size > 0) return; // already seeded
+
+  const wornTopIds = new Set();
+  history.forEach(h=>{ if(h.topId) wornTopIds.add(String(h.topId)); });
+
+  if(!wornTopIds.size) return;
+
+  const allTops = clothes.filter(iTop);
+  // If all tops worn — start fresh cycle
+  if(wornTopIds.size >= allTops.length){
+    globalRotation = {wornTopIds: new Set(), cycleCount: 1, loaded: true};
+  } else {
+    globalRotation = {wornTopIds: wornTopIds, cycleCount: 0, loaded: true};
+  }
+  await saveGlobalRotation();
+  console.log('Global rotation seeded: '+globalRotation.wornTopIds.size+' tops marked worn from history');
 }
 
 
@@ -2385,19 +2398,12 @@ async function debugRotation(){
     txt += 'Cycle: '+rot.cycleCount+'\n\n';
   }
 
-  txt += '\n=== FIREBASE ROTATION ===\n';
-  try{
-    const snap = await db.collection('users').doc(USER_ID).collection('rotation').get();
-    if(snap.empty){ txt += 'No rotation docs in Firebase!\n'; }
-    else {
-      snap.docs.forEach(doc=>{
-        const botName = clothes.find(c=>String(c.id)===doc.id)?.name||doc.id;
-        const data = doc.data();
-        txt += 'Bottom: '+botName+'\n';
-        txt += 'Worn: '+(data.wornTopIds||[]).map(tid=>clothes.find(c=>String(c.id)===String(tid))?.name||tid).join(', ')+'\n\n';
-      });
-    }
-  }catch(e){ txt += 'Firebase error: '+e.message+'\n'; }
+  txt += '\n=== GLOBAL ROTATION ===\n';
+  txt += 'Loaded: '+globalRotation.loaded+'\n';
+  txt += 'Worn tops ('+globalRotation.wornTopIds.size+'): '+[...globalRotation.wornTopIds].map(tid=>clothes.find(c=>String(c.id)===tid)?.name||tid).join(', ')+'\n';
+  txt += 'Cycle: '+globalRotation.cycleCount+'\n';
+  const unwornNow = clothes.filter(t=>iTop(t)&&!globalRotation.wornTopIds.has(String(t.id)));
+  txt += 'Unworn tops ('+unwornNow.length+'): '+unwornNow.map(t=>t.name).join(', ')+'\n';
 
   txt += '\n=== WORN TODAY ===\n';
   try{
