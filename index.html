@@ -7,32 +7,35 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="Saya"/>
-<meta name="theme-color" content="#F2F0ED"/>
+<meta name="theme-color" content="#F3F5FB"/>
 <meta name="version" content="v2.1"/>
 <title>Saya</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet"/>
 <style>
 :root {
-  --bg:       #F2F0ED;
+  --bg:       #F3F5FB;
   --bg2:      #FFFFFF;
-  --bg3:      #E8E4DC;
-  --border:   #E0DCD4;
-  --border2:  #D0CCC4;
-  --text:     #1A1815;
-  --text2:    #7A7670;
-  --text3:    #B0ACA6;
-  --acc:      #4A7A5A;
-  --acc2:     #3A6A4A;
-  --acc-bg:   #EEF5F1;
-  --acc-text: #2A5A3A;
+  --bg3:      #E4E9F6;
+  --border:   #D9E0F2;
+  --border2:  #C3CDE8;
+  --text:     #0A1440;
+  --text2:    #5A6694;
+  --text3:    #9AA4C7;
+  --acc:      #255DCE;
+  --acc2:     #1B49A8;
+  --acc-bg:   #EAF0FD;
+  --acc-text: #021861;
+  --navy:     #021861;
+  --red:      #DE1110;
   --warn:     #8A6A20;
   --warn-bg:  #FBF5E6;
   --warn-br:  #E8D8A0;
   --r-sm:     8px;
   --r-md:     10px;
   --r-lg:     14px;
-  --sans:     'Jost', system-ui, sans-serif;
+  --sans:     'Manrope', system-ui, sans-serif;
+  --display:  'Syne', 'Manrope', system-ui, sans-serif;
   --safe-t:   env(safe-area-inset-top, 44px);
   --safe-b:   env(safe-area-inset-bottom, 20px);
 }
@@ -43,13 +46,18 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .screen { position: fixed; inset: 0; display: flex; flex-direction: column; opacity: 0; pointer-events: none; transition: opacity .22s; background: var(--bg); }
 .screen.active { opacity: 1; pointer-events: all; }
 
-/* ── LOADING ── */
-#scr-load { align-items: center; justify-content: center; gap: 16px; }
-.load-word { font-size: 2.2rem; font-weight: 200; letter-spacing: .28em; color: var(--text); }
-.load-sub { font-size: .78rem; letter-spacing: .16em; color: var(--text3); font-weight: 300; }
-.load-bar { width: 48px; height: 1px; background: var(--border2); position: relative; overflow: hidden; }
-.load-bar::after { content: ''; position: absolute; inset: 0; background: var(--acc); animation: loadslide 1.4s ease-in-out infinite; }
-@keyframes loadslide { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+/* ── LOADING (letters rise, bar fills over 5s) ── */
+#scr-load { align-items: center; justify-content: center; gap: 14px; background: #021861; }
+.load-word { font-family: var(--display); font-size: 3.4rem; font-weight: 800; color: #fff; display: flex; align-items: baseline; letter-spacing: .12em; overflow: hidden; padding: .1em .05em; }
+.load-word span { display: inline-block; transform: translateY(110%); opacity: 0; animation: rise .8s cubic-bezier(.2,.9,.2,1) forwards; animation-delay: calc(var(--i) * .16s + .2s); }
+.load-dot { width: .22em; height: .22em; border-radius: 50%; background: #DE1110; margin-left: .08em; transform: scale(0); animation: pop .5s cubic-bezier(.3,1.6,.5,1) forwards; animation-delay: 1.1s; }
+@keyframes rise { to { transform: translateY(0); opacity: 1; } }
+@keyframes pop { to { transform: scale(1); } }
+.load-sub { font-size: .78rem; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,255,255,.55); opacity: 0; animation: fadein .8s ease forwards; animation-delay: 1.3s; }
+@keyframes fadein { to { opacity: 1; } }
+.load-bar { width: 140px; height: 3px; background: rgba(255,255,255,.15); border-radius: 3px; position: relative; overflow: hidden; margin-top: 10px; }
+.load-bar::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, #255DCE, #DE1110); transform: translateX(-100%); animation: barfill 4.6s ease-in-out forwards; animation-delay: .2s; }
+@keyframes barfill { to { transform: translateX(0); } }
 
 /* ── ONBOARDING ── */
 #scr-onboard { justify-content: center; padding: 2rem 1.5rem; overflow-y: auto; }
@@ -93,7 +101,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .divider { height: 1px; background: var(--border); margin: .75rem 0; }
 
 /* ── TODAY ── */
-.greeting { font-size: 1rem; font-weight: 300; color: var(--text); margin-bottom: 1rem; letter-spacing: .02em; }
+.greeting { font-family: var(--display); font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 1rem; letter-spacing: .02em; }
 .weather-card { padding: .9rem 1rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
 .w-temp { font-size: 2rem; font-weight: 200; color: var(--text); line-height: 1; }
 .w-city { font-size: .68rem; letter-spacing: .08em; color: var(--text3); margin-bottom: 2px; }
@@ -201,8 +209,8 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .q-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .q-over { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .6rem; font-weight: 500; text-align: center; }
 .q-pending { background: rgba(26,24,21,.35); color: #fff; }
-.q-scanning { background: rgba(74,122,90,.75); color: #fff; }
-.q-done { background: rgba(74,122,90,.85); color: #fff; }
+.q-scanning { background: rgba(37,93,206,.75); color: #fff; }
+.q-done { background: rgba(37,93,206,.85); color: #fff; }
 .q-err { background: rgba(180,60,60,.7); color: #fff; }
 .scan-btn { width: 100%; padding: .82rem; background: var(--text); color: var(--bg); border: none; border-radius: var(--r-md); font-family: var(--sans); font-size: .85rem; font-weight: 400; letter-spacing: .08em; cursor: pointer; transition: opacity .15s; }
 .scan-btn:disabled { opacity: .3; cursor: not-allowed; }
@@ -477,15 +485,18 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .acc-type { font-size:.58rem; color:var(--acc-text); background:var(--acc-bg); padding:2px 5px; border-radius:3px; }
 .acc-loading { font-size:.75rem; color:var(--text3); font-weight:300; font-style:italic; }
 
+
+/* ── DISPLAY FONT (Syne) for brand moments ── */
+.t-wordmark, .ob-mark { font-family: var(--display); font-weight: 800; letter-spacing: .22em; }
 </style>
 </head>
 <body>
 
 <!-- LOADING -->
 <div class="screen active" id="scr-load">
-  <div class="load-word">S A Y A</div>
-  <div class="load-bar"></div>
+  <div class="load-word"><span style="--i:0">S</span><span style="--i:1">A</span><span style="--i:2">Y</span><span style="--i:3">A</span><b class="load-dot"></b></div>
   <div class="load-sub">your silhouette</div>
+  <div class="load-bar"></div>
 </div>
 
 <!-- ONBOARDING -->
@@ -494,8 +505,8 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   <div class="ob-script">سایه · Your silhouette before you speak</div>
 
   <div class="ob-block">
-    <div class="ob-tag">Step 1 — Gemini API key</div>
-    <div class="ob-desc">Go to <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → Get API key → Create → paste below. Free, takes 2 minutes.</div>
+    <div class="ob-tag">Step 1 — Gemini API key (optional)</div>
+    <div class="ob-desc">Go to <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → Get API key → Create → paste below. Only needed to scan new clothes from photos. You can skip this and add it later in Settings.</div>
     <input class="ob-input" type="password" id="ob-key" placeholder="Paste your Gemini API key…" oninput="chkOb()"/>
   </div>
 
@@ -718,7 +729,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
     <div class="divider" style="margin-top:1rem;"></div>
     <button class="btn-danger" onclick="clearAll()">Clear all data and start over</button>
     <div class="divider" style="margin-top:1rem;"></div>
-    <button class="btn-save" onclick="debugRotation()" style="background:#1a1a2e;width:100%;margin-top:0;">🔍 Debug rotation</button>
+    <button class="btn-save" onclick="debugRotation()" style="background:#021861;width:100%;margin-top:0;">🔍 Debug rotation</button>
     <div id="debug-out" style="font-size:.72rem;color:var(--text2);margin-top:.75rem;line-height:1.6;white-space:pre-wrap;font-family:monospace;background:var(--bg);padding:.75rem;border-radius:var(--r-md);display:none;"></div>
     <div class="divider" style="margin-top:1rem;"></div>
     <div class="set-label">Location</div>
@@ -875,7 +886,7 @@ window.addEventListener('load',async ()=>{
   ldLocal();
   await loadFirebase();
   setTimeout(async ()=>{
-    if(!gemKey||!userName){
+    if(!userName){
       showScr('onboard');
     } else {
       showScr('main');
@@ -894,8 +905,8 @@ function showScr(id){
 function chkOb(){
   const k=document.getElementById('ob-key').value.trim();
   const n=document.getElementById('ob-name').value.trim();
-  document.getElementById('ob-btn').classList.toggle('on',!!(k&&n));
-  document.getElementById('ob-btn').disabled=!(k&&n);
+  document.getElementById('ob-btn').classList.toggle('on',!!n);
+  document.getElementById('ob-btn').disabled=!n;
 }
 async function finishOb(){
   gemKey=document.getElementById('ob-key').value.trim();
@@ -908,9 +919,9 @@ async function finishOb(){
 }
 
 // ── BOOT ──
-function boot(){
+async function boot(){
   clearOldWornToday();
-  seedGlobalRotationFromHistory(); // seed global rotation from existing history
+  await seedGlobalRotationFromHistory(); // finish seeding BEFORE the first suggestion
   renderGreeting();
   fetchWeather();
   renderWardrobe();
@@ -940,7 +951,7 @@ function renderGreeting(){
 async function fetchWeather(){
   document.getElementById('w-city').textContent=loc.name;
   try{
-    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,weathercode&timezone=Asia/Kolkata`);
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,weathercode&timezone=auto`);
     const d=await r.json();
     const t=Math.round(d.current.temperature_2m);
     const c=d.current.weathercode;
@@ -948,16 +959,27 @@ async function fetchWeather(){
     document.getElementById('w-desc').textContent=wDesc(c);
     document.getElementById('w-icon').textContent=wIcon(c);
     window._wx={temp:t,desc:wDesc(c),code:c};
+    window._wxAt=Date.now();
     renderWeatherWarning(t,c);
   }catch(e){
-    document.getElementById('w-temp').textContent='32°C';
-    document.getElementById('w-desc').textContent='Hot and humid';
-    document.getElementById('w-icon').textContent='☀️';
+    document.getElementById('w-temp').textContent='--°';
+    document.getElementById('w-desc').textContent='Weather unavailable — assuming 32°C';
+    document.getElementById('w-icon').textContent='·';
     window._wx={temp:32,desc:'hot and humid'};
   }
 }
-function wIcon(c){if(c===0)return'☀️';if(c<=2)return'⛅';if(c<=49)return'🌫️';if(c<=69)return'🌧️';return'⛈️';}
-function wDesc(c){if(c===0)return'Clear sky';if(c<=2)return'Partly cloudy';if(c<=49)return'Foggy';if(c<=69)return'Rainy';return'Thunderstorm';}
+function wIcon(c){
+  if(c===0)return'☀️'; if(c<=2)return'⛅'; if(c===3)return'☁️'; if(c<=48)return'🌫️';
+  if(c<=57)return'🌦️'; if(c<=67)return'🌧️'; if(c<=77)return'❄️'; if(c<=82)return'🌧️'; return'⛈️';
+}
+function wDesc(c){
+  if(c===0)return'Clear sky'; if(c<=2)return'Partly cloudy'; if(c===3)return'Overcast'; if(c<=48)return'Foggy';
+  if(c<=57)return'Drizzle'; if(c<=67)return'Rainy'; if(c<=77)return'Snow'; if(c<=82)return'Rain showers'; return'Thunderstorm';
+}
+// refresh weather when you come back to the app after 30+ minutes
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && window._wxAt && Date.now()-window._wxAt>30*60*1000 && gemKey!==undefined && clothes.length) fetchWeather();
+});
 
 // ── OCCASION ──
 function setMultiOcc(el){
@@ -1223,7 +1245,7 @@ async function genOutfit(){
   let candTops, candBots;
   if(forcedBot){
     // Bottom selected: tops come from the GLOBAL rotation, minus anything worn today
-    let unwornTops = await getUnwornTopsGlobal();
+    let unwornTops = await getUnwornTopsGlobal(rotationPool(occ));
     unwornTops = unwornTops.filter(t=>!wornTodayTops.has(String(t.id)));
     if(!unwornTops.length){
       const allTopsMinusToday = tops.filter(t=>!wornTodayTops.has(String(t.id)));
@@ -1243,8 +1265,20 @@ async function genOutfit(){
     candBots = [forcedBot];
   } else {
     // Auto mode: never today's worn tops, avoid recently shown combos
-    let availableTops = tops.filter(t=>!wornTodayTops.has(String(t.id)));
-    if(!availableTops.length) availableTops = tops;
+    let availableTops = (await getUnwornTopsGlobal(rotationPool(occ))).filter(t=>!wornTodayTops.has(String(t.id)));
+    if(!availableTops.length){
+      availableTops = rotationPool(occ).filter(t=>!wornTodayTops.has(String(t.id)));
+    }
+    if(!availableTops.length){
+      document.getElementById('outfit-area').innerHTML=
+        '<div class="card" style="padding:1.25rem;margin-bottom:.75rem;text-align:center;">'
+        +'<div style="font-size:1.5rem;margin-bottom:.75rem;">👔</div>'
+        +'<div style="font-size:.88rem;font-weight:400;color:var(--text);margin-bottom:.4rem;">All tops worn today</div>'
+        +'<div style="font-size:.8rem;color:var(--text2);font-weight:300;line-height:1.6;">Nothing left to suggest for '+occ+'. Come back tomorrow!</div>'
+        +'</div>';
+      document.getElementById('regen-btn').disabled=false;
+      return;
+    }
     candTops = availableTops;
     candBots = bots;
   }
@@ -1529,7 +1563,7 @@ function renderQueue(){
 async function scanAll(){
   if(scanning)return;
   gemKey = _memKey || localStorage.getItem('saya_k') || gemKey;
-  if(!gemKey){toast('Add your Gemini API key in Settings first');return;}
+  if(!gemKey){toast('Add a Gemini API key in Settings to scan clothes');return;}
   const pend=queue.filter(q=>q.status==='pending');
   if(!pend.length)return;
   scanning=true;
@@ -2478,26 +2512,36 @@ async function saveGlobalRotation(){
   }catch(e){ console.error('save rotation error', e); }
 }
 
+// Tops that take part in the rotation. Jackets are layers, so they never count.
+// Office / Formal / Wedding rotate through shirts only; everything else rotates through all tops.
+function rotationPool(o){
+  const formal = ['Formal','Office','Wedding / Function'].includes(o);
+  let pool = clothes.filter(c=>c.type!=='jacket' && (formal ? (c.type==='formal-shirt'||c.type==='casual-shirt') : iTop(c)));
+  if(!pool.length) pool = clothes.filter(c=>c.type!=='jacket' && iTop(c));
+  if(!pool.length) pool = clothes.filter(iTop);
+  return pool;
+}
+
 async function markTopWornGlobal(topId){
   await loadGlobalRotation();
-  const tid = String(topId);
-  globalRotation.wornTopIds.add(tid);
-
-  const totalTops = clothes.filter(iTop).length;
-  if(globalRotation.wornTopIds.size >= totalTops){
-    // Full cycle complete — reset
-    globalRotation.wornTopIds = new Set([tid]);
-    globalRotation.cycleCount++;
-    toast('Full wardrobe rotation complete! Starting fresh cycle 🔄');
-  }
+  globalRotation.wornTopIds.add(String(topId));
   await saveGlobalRotation();
 }
 
-async function getUnwornTopsGlobal(){
+// Unworn tops for this pool. When every top in the pool has been worn, only that pool
+// starts a fresh round (tops outside the pool, e.g. t-shirts during Office, are untouched).
+async function getUnwornTopsGlobal(pool){
   await loadGlobalRotation();
-  const allTops = clothes.filter(iTop);
-  const unworn = allTops.filter(t=>!globalRotation.wornTopIds.has(String(t.id)));
-  console.log('Global rotation: '+globalRotation.wornTopIds.size+' worn, '+unworn.length+' unworn');
+  pool = pool || rotationPool(occ);
+  let unworn = pool.filter(t=>!globalRotation.wornTopIds.has(String(t.id)));
+  if(!unworn.length && pool.length){
+    const keep = getWornTodayAuto();
+    pool.forEach(t=>{ if(!keep.has(String(t.id))) globalRotation.wornTopIds.delete(String(t.id)); });
+    globalRotation.cycleCount++;
+    toast('Full rotation complete — starting a fresh round 🔄');
+    await saveGlobalRotation();
+    unworn = pool.filter(t=>!globalRotation.wornTopIds.has(String(t.id)));
+  }
   return unworn;
 }
 
@@ -2605,8 +2649,12 @@ async function debugRotation(){
   txt += 'Loaded: '+globalRotation.loaded+'\n';
   txt += 'Worn tops ('+globalRotation.wornTopIds.size+'): '+[...globalRotation.wornTopIds].map(tid=>clothes.find(c=>String(c.id)===tid)?.name||tid).join(', ')+'\n';
   txt += 'Cycle: '+globalRotation.cycleCount+'\n';
-  const unwornNow = clothes.filter(t=>iTop(t)&&!globalRotation.wornTopIds.has(String(t.id)));
-  txt += 'Unworn tops ('+unwornNow.length+'): '+unwornNow.map(t=>t.name).join(', ')+'\n';
+  const poolNow = rotationPool(occ);
+  const unwornNow = poolNow.filter(t=>!globalRotation.wornTopIds.has(String(t.id)));
+  txt += 'Current pool ('+occ+'): '+poolNow.length+' tops\n';
+  txt += 'Unworn in pool ('+unwornNow.length+'): '+unwornNow.map(t=>t.name).join(', ')+'\n';
+  const shirtPool = rotationPool('Office');
+  txt += 'Office pool (shirts only): '+shirtPool.filter(t=>!globalRotation.wornTopIds.has(String(t.id))).length+' unworn of '+shirtPool.length+'\n';
 
   txt += '\n=== WORN TODAY ===\n';
   try{
