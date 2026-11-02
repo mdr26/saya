@@ -987,43 +987,245 @@ function setOcc(o,el){
 }
 
 // ── OUTFIT GENERATION ──
+// ── LOCAL STYLE ENGINE (no API calls — runs on the phone) ──
+function hexToHsl(hex){
+  var h=String(hex||'').replace('#','');
+  if(h.length===3) h=h.split('').map(function(c){return c+c;}).join('');
+  if(!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+  var r=parseInt(h.substr(0,2),16)/255, g=parseInt(h.substr(2,2),16)/255, b=parseInt(h.substr(4,2),16)/255;
+  var mx=Math.max(r,g,b), mn=Math.min(r,g,b), l=(mx+mn)/2, s=0, hu=0, d=mx-mn;
+  if(d){
+    s=d/(1-Math.abs(2*l-1));
+    if(mx===r) hu=((g-b)/d)%6; else if(mx===g) hu=(b-r)/d+2; else hu=(r-g)/d+4;
+    hu*=60; if(hu<0) hu+=360;
+  }
+  return {h:hu,s:s,l:l};
+}
+function colourKind(item){
+  var name=String((item&&item.color)||'').toLowerCase();
+  var c=hexToHsl(item&&item.hex);
+  if(/black/.test(name)) return 'black';
+  if(/white|ivory|off-white/.test(name)) return 'white';
+  if(/grey|gray|charcoal|ash/.test(name)) return 'grey';
+  if(item&&item.type==='jeans'&&c&&c.h>=180&&c.h<=260&&c.s>0.1) return 'denim';
+  if(/denim|indigo/.test(name)) return 'denim';
+  if(/navy|midnight/.test(name)) return 'navy';
+  if(/cream|beige|khaki|tan|sand|stone|ecru|camel|biscuit/.test(name)) return 'beige';
+  if(/olive|army|sage|moss/.test(name)) return 'olive';
+  if(/brown|chocolate|coffee|rust|walnut/.test(name)) return 'brown';
+  if(!c) return 'colour';
+  if(c.l<0.13) return 'black';
+  if(c.s<0.12) return c.l>0.88?'white':(c.l<0.2?'black':'grey');
+  if(c.h>=190&&c.h<=255&&c.l<0.27&&c.s>0.2) return 'navy';
+  if(c.h>=25&&c.h<=60&&c.s<0.5&&c.l>0.62) return 'beige';
+  if(c.h>=10&&c.h<=45&&c.l<0.42&&c.s>=0.2) return 'brown';
+  if(c.h>=60&&c.h<=110&&c.l<0.5&&c.s<0.6) return 'olive';
+  return 'colour';
+}
+var KIND_ORDER=['white','black','grey','navy','denim','beige','brown','olive','colour'];
+var PAIR_MATRIX={ // rows = bottom colour, columns = top colour (KIND_ORDER)
+  black :[9,8,8,5,6,9,6,8,9],
+  grey  :[9,8,6,8,7,7,6,7,8],
+  navy  :[9,5,8,6,6,9,8,8,8],
+  denim :[9,9,8,6,5,9,7,8,8],
+  beige :[8,8,7,9,8,7,8,9,8],
+  white :[7,8,7,9,8,8,8,8,9],
+  brown :[9,5,6,8,7,9,6,7,7],
+  olive :[9,8,7,7,8,9,7,6,7],
+  colour:[9,8,8,7,7,8,6,6,6]
+};
+var FORMAL_OCC=['Formal','Office','Wedding / Function'];
+var DRESSY_OCC=['Evening out','Smart casual'];
+
+function styleScore(top,bot,occ,wx){
+  var kt=colourKind(top), kb=colourKind(bot);
+  var score=PAIR_MATRIX[kb||'colour'][KIND_ORDER.indexOf(kt)];
+  var ct=hexToHsl(top.hex), cb=hexToHsl(bot.hex);
+  var note='';
+
+  // two chromatic colours: tonal clash / loud complementary
+  if(kt==='colour'&&kb==='colour'&&ct&&cb){
+    var dh=Math.abs(ct.h-cb.h); if(dh>180) dh=360-dh;
+    if(dh<20&&Math.abs(ct.l-cb.l)<0.15) score=4;
+    else if(dh>140&&ct.s>0.5&&cb.s>0.5) score=5;
+  }
+  // loud red/orange top on navy is harsher than other colours
+  if(kb==='navy'&&kt==='colour'&&ct&&ct.s>0.7&&(ct.h<15||ct.h>345)) score=7;
+  // pattern on top with a coloured bottom gets busy
+  if(top.pattern&&!/solid|n\/a/i.test(top.pattern)&&kb==='colour') score-=1;
+
+  // occasion rules
+  var tt=top.type, bt=bot.type;
+  if(FORMAL_OCC.indexOf(occ)>-1){
+    if(tt==='t-shirt') score-=3;
+    if(tt==='casual-shirt') score-=1;
+    if(bt==='jeans') score-= (occ==='Office'?1:3);
+    if(bt==='linen-pants') score-= (occ==='Wedding / Function'?1:2);
+    if(bt==='shorts') score-=5;
+    if(bt==='formal-pants') score+=1;
+  } else if(DRESSY_OCC.indexOf(occ)>-1){
+    if(tt==='t-shirt') score-=1;
+    if(bt==='shorts') score-=3;
+    if(bt==='formal-pants'&&tt==='t-shirt') score-=1;
+  } else {
+    if(bt==='formal-pants'&&tt==='t-shirt') score-=1;
+  }
+  if(bt==='shorts'&&tt==='formal-shirt') score-=4;
+
+  // weather
+  var temp=wx&&wx.temp!=null?wx.temp:32;
+  var rainy=wx&&wx.code!=null&&wx.code>=51;
+  if(tt==='jacket'){ if(temp>=29) score-=5; else if(temp>=24) score-=2; }
+  if(bt==='shorts'&&temp<=22) score-=2;
+  if(rainy){ if(bt==='shorts') score-=1; if(kb==='white') score-=2; }
+
+  score=Math.max(1,Math.min(10,score));
+  var verdict=score>=8?'works':score>=6?'risky':'avoid';
+  return {score:score,verdict:verdict,theory:styleTheory(top,bot,kt,kb,score)};
+}
+
+function styleTheory(top,bot,kt,kb,score){
+  var tc=(top.color||kt), bc=(bot.color||kb);
+  var pair=[kt,kb].sort().join('+');
+  if(pair==='black+navy') return 'Black and navy are both very dark but different in tone, so together they look like an accidental mismatch. Pick one dark colour and keep the other piece lighter.';
+  if(pair==='black+brown') return 'Black and brown fight each other because their undertones differ. Stay with one of them and pair it with something lighter.';
+  if(kt==='denim'&&kb==='denim') return 'Denim on denim works only when the two shades are clearly different. Here they are too close, so it reads as a mistake rather than a style choice.';
+  if(kt==='navy'&&kb==='denim') return 'Navy and blue denim sit too close in colour, so the outfit loses definition. A white, grey or beige top would lift it.';
+  if(kt===kb&&kt!=='colour') return 'Both pieces are almost the same colour family, so the outfit looks flat. Add contrast with your shoes, belt or watch.';
+  if(score>=9) return 'The '+tc+' top and '+bc+' bottom pair very well. One of them is a clean neutral base, so the outfit looks sharp without trying too hard.';
+  if(score>=8) return 'A balanced pairing: '+tc+' with '+bc+' does not compete for attention and the contrast is easy on the eye.';
+  if(score>=6) return 'This works but is not the strongest option. '+tc+' with '+bc+' is a little safe or slightly busy, so keep your accessories simple.';
+  return 'The '+tc+' top and '+bc+' bottom compete with each other. Swap one of them for a neutral like white, black, grey or beige.';
+}
+
+function styleTip(top,bot,occ,wx,r){
+  var temp=wx&&wx.temp!=null?wx.temp:32, parts=[];
+  if(FORMAL_OCC.indexOf(occ)>-1) parts.push('Keep it crisp: tuck in the shirt and wear a belt that matches your shoes.');
+  else if(DRESSY_OCC.indexOf(occ)>-1) parts.push('Smart casual works best with a clean fit and one standout piece.');
+  else parts.push('A relaxed fit keeps this look comfortable all day.');
+  if(wx&&wx.code>=51) parts.push('Rain is expected, so avoid suede shoes and light-coloured hems.');
+  else if(temp>=30) parts.push('It is '+temp+'°C, so breathable cotton or linen is the right call.');
+  else if(temp<=22) parts.push('It is cooler at '+temp+'°C, so carry a light layer.');
+  return parts.join(' ');
+}
+function styleWhy(top,bot,r){
+  return (r.score>=8?'Colour match '+r.score+'/10: ':'Colour match '+r.score+'/10 — ')+(top.color||'top')+' with '+(bot.color||'bottom')+'.';
+}
+
+// Better bottoms (excluding current) for a given top
+function betterBottoms(top,curBot,occ,wx,minScore,limit){
+  return clothes.filter(iBot).filter(function(b){return String(b.id)!==String(curBot.id);})
+    .map(function(b){return {b:b,r:styleScore(top,b,occ,wx)};})
+    .filter(function(x){return x.r.score>=minScore;})
+    .sort(function(a,b){return b.r.score-a.r.score;})
+    .slice(0,limit||2).map(function(x){return x.b;});
+}
+
+function shuffled(a){var x=a.slice();for(var i=x.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=x[i];x[i]=x[j];x[j]=t;}return x;}
+function accText(a){return String((a.name||'')+' '+(a.color||'')+' '+(a.fabric||'')+' '+(a.style||'')).toLowerCase();}
+function metalOf(a){var s=accText(a);if(/gold|brass|golden/.test(s))return 'gold';if(/silver|steel|chrome|platinum/.test(s))return 'silver';return 'other';}
+
+function pickAccessories(top,bot,occ,wx){
+  var all=clothes.filter(iAcc);
+  var level=FORMAL_OCC.indexOf(occ)>-1||(top.type==='formal-shirt'&&bot.type==='formal-pants')?'formal'
+           :(DRESSY_OCC.indexOf(occ)>-1||top.type==='formal-shirt'||bot.type==='formal-pants')?'dressy':'casual';
+  var temp=wx&&wx.temp!=null?wx.temp:32, kb=colourKind(bot);
+  var res={shoes:null,watch:null,jewellery:[],others:[],shoesTip:'',jewelleryTip:''};
+
+  // Shoes
+  var shoes=all.filter(function(a){return a.type==='shoes';});
+  if(shoes.length){
+    var best=null,bestS=-99;
+    shoes.forEach(function(a){
+      var s=accText(a), sc=5+Math.random()*0.5, k=colourKind(a);
+      var formalShoe=/formal|oxford|derby|loafer|brogue|monk|dress/.test(s);
+      var sneaker=/sneaker|trainer|canvas|casual|sport|running/.test(s);
+      var sandal=/sandal|slipper|slide|flip/.test(s);
+      if(level==='formal'){ if(formalShoe)sc+=4; if(sneaker)sc-=3; if(sandal)sc-=5; }
+      else if(level==='dressy'){ if(formalShoe)sc+=2; if(sneaker)sc+=1; if(sandal)sc-=3; }
+      else { if(sneaker)sc+=3; if(sandal&&temp>=30)sc+=1; if(formalShoe&&!/loafer/.test(s))sc-=1; }
+      if(k==='black'){ if(kb==='brown')sc-=3; else sc+=1; }
+      else if(k==='brown'||k==='beige'){ if(kb==='black')sc-=2; else if(['navy','denim','beige','olive','white'].indexOf(kb)>-1)sc+=2; }
+      else if(k==='white'){ if(level==='formal')sc-=2; else if(['black','denim','beige','navy'].indexOf(kb)>-1)sc+=2; }
+      if(sc>bestS){bestS=sc;best=a;}
+    });
+    res.shoes=best;
+    res.shoesTip='Suits a '+level+' look with '+(bot.color||'your bottoms')+'.';
+  }
+
+  // Watch
+  var watches=all.filter(function(a){return a.type==='watch';});
+  if(watches.length){
+    var bw=null,bws=-99;
+    watches.forEach(function(a){
+      var s=accText(a), sc=5+Math.random()*0.5;
+      var dress=/analog|leather|dress|classic|automatic/.test(s), sport=/digital|sport|smart|fitness|g-shock/.test(s);
+      if(level==='formal'){ if(dress)sc+=3; if(sport)sc-=3; }
+      else if(level==='dressy'){ if(dress)sc+=2; }
+      else { if(sport)sc+=2; if(dress)sc+=1; }
+      if(sc>bws){bws=sc;bw=a;}
+    });
+    res.watch=bw;
+  }
+
+  // Belt (not with shorts; needed for shirts / smarter looks)
+  var belts=all.filter(function(a){return a.type==='belt';});
+  if(belts.length&&bot.type!=='shorts'&&(level!=='casual'||/shirt/.test(top.type))){
+    var sk=res.shoes?colourKind(res.shoes):null;
+    var bb=belts.slice().sort(function(a,b){
+      return ((colourKind(b)===sk?3:0)+Math.random()*0.5)-((colourKind(a)===sk?3:0)+Math.random()*0.5);
+    })[0];
+    res.others.push(bb);
+  }
+
+  // Jewellery — layer within one metal tone
+  var jew=all.filter(function(a){return ['bracelet','ring','chain','necklace'].indexOf(a.type)>-1;});
+  if(jew.length){
+    var metal=res.watch?metalOf(res.watch):'other';
+    if(metal==='other'){
+      var cnt={gold:0,silver:0};
+      jew.forEach(function(a){var m=metalOf(a);if(cnt[m]!=null)cnt[m]++;});
+      metal=cnt.gold>=cnt.silver?(cnt.gold?'gold':'any'):'silver';
+    }
+    var match=function(a){var m=metalOf(a);return metal==='any'||m===metal||(m==='other'&&a.type==='bracelet');};
+    var br=shuffled(jew.filter(function(a){return a.type==='bracelet'&&match(a);}));
+    var rg=shuffled(jew.filter(function(a){return a.type==='ring'&&match(a);}));
+    var ch=shuffled(jew.filter(function(a){return (a.type==='chain'||a.type==='necklace')&&match(a);}));
+    if(level==='formal'){ br=[]; ch=[]; rg=rg.slice(0,1); }
+    else if(level==='dressy'){ br=br.slice(0,1); rg=rg.slice(0,1); ch=top.type==='formal-shirt'?[]:ch.slice(0,1); }
+    else { br=br.slice(0,3); rg=rg.slice(0,2); ch=ch.slice(0,2); }
+    res.jewellery=br.concat(rg,ch);
+    if(res.jewellery.length){
+      res.jewelleryTip=level==='formal'
+        ?'Keep it minimal — your watch and one ring is enough.'
+        :'Stay in '+(metal==='any'?'one metal tone':metal)+' tones'+(res.watch?' to match your watch':'')+'. Layer bracelets on one wrist and spread rings across two fingers.';
+    }
+  }
+
+  // Sunglasses on bright days, bag for work
+  var sun=all.filter(function(a){return a.type==='sunglasses';});
+  var hr=new Date().getHours();
+  if(sun.length&&wx&&wx.code!=null&&wx.code<=2&&hr>=6&&hr<=17) res.others.push(shuffled(sun)[0]);
+  var bag=all.filter(function(a){return a.type==='bag';});
+  if(bag.length&&(occ==='Office'||occ==='Formal')) res.others.push(shuffled(bag)[0]);
+  return res;
+}
+
 async function genOutfit(){
   const tops = clothes.filter(iTop);
   const bots = clothes.filter(iBot);
   if(!tops.length||!bots.length){renderEmptyOutfit();return;}
 
   const isEvent = ['Formal','Office','Wedding / Function','Evening out','Smart casual'].includes(occ);
-
-  // Determine forced bottom
-  // - If user selected a specific bottom → use it
-  // - If event occasion → Saya picks everything freely
-  // - Otherwise → use selected bottom or auto
   const forcedBot = (!isEvent && selectedBot) ? selectedBot : null;
-
-  // ── ROTATION LOGIC ──
-  // Priority of exclusions:
-  // 1. Worn today (confirmed) — NEVER repeat today, no exceptions
-  // 2. Shown in current rotation — exclude until all tops exhausted
-  // 3. Once all tops shown — start new cycle (but still block worn today)
-
   const wornTodayTops = forcedBot ? getWornTodayTops(forcedBot.id) : getWornTodayAuto();
-  const shownInRotation = forcedBot ? getRecentTopsWithBottom(forcedBot.id) : getRecentTopsAuto();
 
-  // Available bottoms
-  const availableBots = forcedBot ? [forcedBot] : bots;
-
+  let candTops, candBots;
   if(forcedBot){
-    // ── BOTTOM SELECTED MODE ──
-    // Step 1: Get unworn tops from GLOBAL rotation
+    // Bottom selected: tops come from the GLOBAL rotation, minus anything worn today
     let unwornTops = await getUnwornTopsGlobal();
-
-    // Step 2: Also exclude worn today (hard block regardless of rotation)
     unwornTops = unwornTops.filter(t=>!wornTodayTops.has(String(t.id)));
-
-    // Step 3: If all tops worn in rotation — rotation engine resets automatically
-    // getUnwornTopsForBot returns all tops when cycle is complete
     if(!unwornTops.length){
-      // Edge case: all tops worn today too — show message
       const allTopsMinusToday = tops.filter(t=>!wornTodayTops.has(String(t.id)));
       if(!allTopsMinusToday.length){
         document.getElementById('outfit-area').innerHTML=
@@ -1037,113 +1239,70 @@ async function genOutfit(){
       }
       unwornTops = allTopsMinusToday;
     }
-
-    if(!gemKey){pickRandom(unwornTops, availableBots);return;}
-
-    var tDesc=unwornTops.map((t,i)=>i+'|id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')+'|'+(t.pattern||'solid')).join('\n');
-    var bDesc=availableBots.map((b,i)=>i+'|id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type+'|'+(b.fit||'regular')).join('\n');
-
+    candTops = unwornTops;
+    candBots = [forcedBot];
   } else {
-    // ── AUTO MODE ──
-    // Same rotation logic but for full combos (top+bottom pairs)
-    const shownCombos = new Set(recentCombos);
-    const wornTodaySet = wornTodayTops; // set of topIds worn today
-
-    // All possible combos excluding worn today
-    let availableTops = tops.filter(t=>!wornTodaySet.has(String(t.id)));
-    if(!availableTops.length) availableTops = tops; // edge case
-
-    // Exclude recently shown in rotation
-    const freshTops = availableTops.filter(t=>
-      availableBots.some(b=>!shownCombos.has(String(t.id)+'_'+String(b.id)))
-    );
-    if(freshTops.length) availableTops = freshTops;
-    else {
-      // Full rotation — reset recentCombos except worn today
-      recentCombos = [];
-      try{ localStorage.setItem('saya_recent_combos', JSON.stringify(recentCombos)); }catch(e){}
-      toast('Starting new rotation — all outfits cycled through');
-    }
-
-    if(!gemKey){pickRandom(availableTops, availableBots);return;}
-
-    var tDesc=availableTops.map((t,i)=>i+'|id:'+t.id+'|'+t.name+'|'+t.color+'|'+t.type+'|'+(t.fit||'regular')+'|'+(t.fabric||'')+'|'+(t.pattern||'solid')).join('\n');
-    var bDesc=availableBots.map((b,i)=>i+'|id:'+b.id+'|'+b.name+'|'+b.color+'|'+b.type+'|'+(b.fit||'regular')).join('\n');
+    // Auto mode: never today's worn tops, avoid recently shown combos
+    let availableTops = tops.filter(t=>!wornTodayTops.has(String(t.id)));
+    if(!availableTops.length) availableTops = tops;
+    candTops = availableTops;
+    candBots = bots;
   }
 
-  if(!gemKey){pickRandom(availableTops, availableBots);return;}
-
-  document.getElementById('outfit-area').innerHTML=`<div class="card" style="padding:1rem;margin-bottom:.75rem;"><div class="skel" style="height:14px;width:60%;margin-bottom:.85rem;"></div><div style="display:flex;gap:8px;margin-bottom:.85rem;"><div class="skel" style="flex:1;aspect-ratio:1;border-radius:var(--r-md);"></div><div style="width:20px;"></div><div class="skel" style="flex:1;aspect-ratio:1;border-radius:var(--r-md);"></div></div><div class="skel" style="height:10px;width:100%;margin-bottom:6px;"></div><div class="skel" style="height:10px;width:75%;"></div></div>`;
-  document.getElementById('regen-btn').disabled=true;
-
-  const wx=window._wx||{temp:32,desc:'hot and humid'};
-  const last=history.length?history[history.length-1]:null;
-  const avoidLine=last?'Avoid repeating top id '+last.topId+' from yesterday.':'';
-
-
-  try{
-    const recentNote = recentCombos.slice(0,8).length ? 'STRICTLY AVOID these recently shown combos (topId_botId): '+recentCombos.slice(0,8).join(', ')+'. Pick a different combination.' : '';
-    const botNote = forcedBot
-      ? 'The user is wearing '+forcedBot.name+' ('+forcedBot.color+'). MUST use botId '+forcedBot.id+'. Find the best matching top with colour score 8+.'
-      : isEvent ? 'This is an event ('+occ+'). Pick the best complete outfit freely, score 8+ only.'
-      : 'Pick the best outfit, colour score 8+ only.';
-    const fullPrompt = 'You are an expert mens stylist in Kerala, India.'
-      +' Weather: '+wx.temp+'C, '+wx.desc+'. Occasion: '+occ+'. '+avoidLine+' '+recentNote+' '+botNote
-      +'\n\nAvailable tops:\n'+tDesc
-      +'\n\nAvailable bottoms:\n'+bDesc
-      +'\n\nRULES: Only suggest colour harmony score 8+. Never repeat recent combos. Consider weather and occasion.'
-      +'\n\nRespond ONLY as valid JSON: {"topId":ID,"botId":ID,"tip":"2-sentence practical tip","why":"one sentence on colour pairing","verdict":"works or risky or avoid","score":1-10,"theory":"2 sentences in simple language why colours work or clash","swap_ids":[],"swap_reason":""}';
-    const res = await callGem(fullPrompt);
-    const p=JSON.parse(res.replace(/```json|```/g,'').trim());
-
-    // ── Rule 3: If score below 8 and bottom was user-selected ──
-    // Suggest a better bottom instead
-    if(forcedBot && p.score && p.score < 8){
-      // Find best matching bottom for this top from all bottoms
-      const bestBotPrompt = 'The user wants to wear top id:'+p.topId+' ('+tops.find(t=>t.id==p.topId)?.name+', '+tops.find(t=>t.id==p.topId)?.color+'). Their selected bottom '+forcedBot.name+' ('+forcedBot.color+') scores only '+p.score+'/10. From these bottoms, which 2 would match better? '+bots.map(b=>'id:'+b.id+'|'+b.name+'|'+b.color).join(', ')+'. Respond ONLY as JSON: {"ids":[id1,id2],"reason":"one sentence why these work better"}';
-      try{
-        const bestRes = await callGem(bestBotPrompt);
-        const bestP = JSON.parse(bestRes.replace(/```json|```/g,'').trim());
-        const betterBots = (bestP.ids||[]).map(id=>clothes.find(c=>String(c.id)==String(id))).filter(Boolean);
-        if(betterBots.length){
-          const thumbs = betterBots.map(b=>b.src
-            ? '<img style="width:44px;height:44px;border-radius:var(--r-sm);object-fit:cover;border:1px solid var(--border);cursor:pointer;" src="'+b.src+'" onclick="selectBotById('+b.id+')" title="'+b.name+'"/>'
-            : '<div style="width:44px;height:44px;border-radius:var(--r-sm);background:'+(b.hex||'#ccc')+';border:1px solid var(--border);cursor:pointer;" onclick="selectBotById('+b.id+')" title="'+b.name+'"></div>'
-          ).join('');
-          document.getElementById('outfit-area').innerHTML=
-            '<div class="card" style="padding:1.1rem;margin-bottom:.75rem;">'
-            +'<div style="font-size:.8rem;font-weight:400;color:var(--text);margin-bottom:.5rem;">⚠️ Poor colour match with '+forcedBot.name+'</div>'
-            +'<div style="font-size:.8rem;color:var(--text2);font-weight:300;line-height:1.6;margin-bottom:.75rem;">'+bestP.reason+'</div>'
-            +'<div style="font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:.5rem;">Try one of these instead</div>'
-            +'<div style="display:flex;gap:8px;align-items:center;">'+thumbs+'</div>'
-            +'</div>';
-          document.getElementById('regen-btn').disabled=false;
-          return;
-        }
-      }catch(e){}
-    }
-
-    const top=clothes.find(c=>c.id==p.topId)||tops[0];
-    const bot=clothes.find(c=>c.id==p.botId)||bots[0];
-    curOutfit={top,bot,tip:p.tip,why:p.why,occ,date:todayStr(),
-      colourData:{verdict:p.verdict,score:p.score,theory:p.theory,swap_ids:p.swap_ids||[],swap_reason:p.swap_reason||''}
-    };
-    saveRecentCombo(String(top.id), String(bot.id));
-    saveOutfit(curOutfit);
-    renderOutfit(curOutfit);
-    // Reset wore button for new suggestion
-    const wb=document.getElementById('wore-btn');
-    if(wb){wb.innerHTML='✓ &nbsp;I wore this today';wb.classList.remove('confirmed');}
-  }catch(e){
-    console.error('genOutfit error:', e.message, e);
-    document.getElementById('outfit-area').innerHTML=
-      '<div class="card" style="padding:1rem;margin-bottom:.75rem;">'
-      +'<div style="font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:#A04040;margin-bottom:.5rem;">Error loading outfit</div>'
-      +'<div style="font-size:.8rem;color:var(--text2);line-height:1.6;font-weight:300;">'+e.message+'</div>'
-      +'<div style="font-size:.72rem;color:var(--text3);margin-top:.5rem;">Tap the refresh button to try again.</div>'
-      +'</div>';
-    toast('Error: '+e.message.slice(0,50));
+  const wx = window._wx || {temp:32,desc:'hot and humid'};
+  const shown = new Set(recentCombos);
+  const buildPairs = (skipShown)=>{
+    const out=[];
+    candTops.forEach(t=>candBots.forEach(b=>{
+      if(skipShown && !forcedBot && shown.has(String(t.id)+'_'+String(b.id))) return;
+      out.push({t:t,b:b,r:styleScore(t,b,occ,wx)});
+    }));
+    return out;
+  };
+  let pairs = buildPairs(true);
+  if(!pairs.length){
+    recentCombos = [];
+    try{ localStorage.setItem('saya_recent_combos', JSON.stringify(recentCombos)); }catch(e){}
+    toast('Starting new rotation — all outfits cycled through');
+    pairs = buildPairs(false);
   }
+
+  // Choose randomly among 8+ matches; else the best available
+  const good = pairs.filter(p=>p.r.score>=8);
+  let pick;
+  if(good.length) pick = good[Math.floor(Math.random()*good.length)];
+  else { pairs.sort((a,b)=>b.r.score-a.r.score); pick = pairs[0]; }
+
+  // Selected bottom matches nothing well → suggest better bottoms
+  if(forcedBot && pick.r.score<8){
+    const better = betterBottoms(pick.t, forcedBot, occ, wx, 8, 2);
+    if(better.length){
+      const thumbs = better.map(b=>b.src
+        ? '<img style="width:44px;height:44px;border-radius:var(--r-sm);object-fit:cover;border:1px solid var(--border);cursor:pointer;" src="'+b.src+'" onclick="selectBotById('+b.id+')" title="'+b.name+'"/>'
+        : '<div style="width:44px;height:44px;border-radius:var(--r-sm);background:'+(b.hex||'#ccc')+';border:1px solid var(--border);cursor:pointer;" onclick="selectBotById('+b.id+')" title="'+b.name+'"></div>'
+      ).join('');
+      document.getElementById('outfit-area').innerHTML=
+        '<div class="card" style="padding:1.1rem;margin-bottom:.75rem;">'
+        +'<div style="font-size:.8rem;font-weight:400;color:var(--text);margin-bottom:.5rem;">⚠️ Poor colour match with '+forcedBot.name+'</div>'
+        +'<div style="font-size:.8rem;color:var(--text2);font-weight:300;line-height:1.6;margin-bottom:.75rem;">None of your unworn tops score 8+ with this bottom. These bottoms match better.</div>'
+        +'<div style="font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:.5rem;">Try one of these instead</div>'
+        +'<div style="display:flex;gap:8px;align-items:center;">'+thumbs+'</div>'
+        +'</div>';
+      document.getElementById('regen-btn').disabled=false;
+      return;
+    }
+  }
+
+  const top=pick.t, bot=pick.b, r=pick.r;
+  const swapBots = r.score<8 ? betterBottoms(top, bot, occ, wx, r.score+1, 2) : [];
+  curOutfit={top,bot,tip:styleTip(top,bot,occ,wx,r),why:styleWhy(top,bot,r),occ,date:todayStr(),
+    colourData:{verdict:r.verdict,score:r.score,theory:r.theory,swap_ids:swapBots.map(b=>b.id),swap_reason:swapBots.length?'These bottoms score higher with this top.':''}
+  };
+  saveRecentCombo(String(top.id), String(bot.id));
+  saveOutfit(curOutfit);
+  renderOutfit(curOutfit);
+  const wb=document.getElementById('wore-btn');
+  if(wb){wb.innerHTML='✓ &nbsp;I wore this today';wb.classList.remove('confirmed');}
   document.getElementById('regen-btn').disabled=false;
 }
 
@@ -1232,17 +1391,16 @@ function renderColourVerdict(p, top, bot){
 
 async function runColourVerdict(top, bot){
   const loading=document.getElementById('colour-loading');
-  const verdict=document.getElementById('colour-verdict');
-  if(!loading||!verdict||!gemKey||!top||!bot){if(loading)loading.style.display='none';return;}
-  loading.style.display='flex';
-  verdict.style.display='none';
-  try{
-    const otherBots=clothes.filter(c=>['jeans','linen-pants','formal-pants','shorts'].includes(c.type)&&c.id!=bot.id).slice(0,4);
-    const prompt='You are a mens colour expert. Outfit: Top: '+top.name+' ('+top.color+'). Bottom: '+bot.name+' ('+bot.color+'). Other bottoms: '+otherBots.map(b=>'id:'+b.id+'|'+b.name+'|'+b.color).join(', ')+'. Respond ONLY as JSON: {"verdict":"works or risky or avoid","score":1-10,"theory":"2 sentences in simple language","confidence":"high or medium or low","swap_ids":[],"swap_reason":""}';
-    const res=await callGem(prompt);
-    const p=JSON.parse(res.replace(/```json|```/g,'').trim());
-    renderColourVerdict(p, top, bot);
-  }catch(e){if(loading)loading.style.display='none';}
+  if(loading) loading.style.display='none';
+  if(!top||!bot) return;
+  const wx=window._wx||{temp:32,desc:'hot and humid'};
+  const r=styleScore(top,bot,occ,wx);
+  const swap=r.score<8?betterBottoms(top,bot,occ,wx,r.score+1,2):[];
+  if(curOutfit&&curOutfit.top===top&&curOutfit.bot===bot){
+    curOutfit.colourData={verdict:r.verdict,score:r.score,theory:r.theory,swap_ids:swap.map(b=>b.id),swap_reason:swap.length?'These bottoms score higher with this top.':''};
+    curOutfit.why=styleWhy(top,bot,r);
+  }
+  renderColourVerdict({verdict:r.verdict,score:r.score,theory:r.theory,swap_ids:swap.map(b=>b.id),swap_reason:swap.length?'These bottoms score higher with this top.':''}, top, bot);
 }
 
 function swapBottom(id){
@@ -1250,6 +1408,7 @@ function swapBottom(id){
   const newBot = clothes.find(c=>c.id==id);
   if(!newBot || !curOutfit) return;
   curOutfit.bot = newBot;
+  curOutfit.colourData = null;
   curOutfit.tip = 'A better colour match for your top.';
   curOutfit.why = '';
   renderOutfit(curOutfit);
@@ -1417,11 +1576,13 @@ async function scanAll(){
   if(!queue.length) setTimeout(closeUpload, 800);
 }
 
-// ── GEMINI ──
+// ── GEMINI (used only for scanning photos, shop scan, trips) ──
+const GEM_MODEL='gemini-3.1-flash-lite'; // change here if Google retires this model
+
 async function callGem(prompt){
   const key = _memKey || localStorage.getItem('saya_k') || gemKey;
   if(!key) throw new Error('No API key');
-  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.4}})});
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEM_MODEL}:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.4}})});
   const d=await r.json();if(d.error)throw new Error(d.error.message);
   return d.candidates[0].content.parts[0].text;
 }
@@ -1434,7 +1595,7 @@ async function callGemVision(b64,mime,prompt){
   const controller = new AbortController();
   const timeout = setTimeout(()=>controller.abort(), 30000);
   try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${key}`,{
+    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEM_MODEL}:generateContent?key=${key}`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       signal: controller.signal,
@@ -1488,7 +1649,7 @@ async function testKey(){
   if(!k){ res.textContent='❌ No key found. Paste your key above first.'; return; }
   res.textContent='Key found: '+k.slice(0,8)+'… Calling Gemini…';
   try{
-    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key='+k,{
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEM_MODEL}:generateContent?key=${k}`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contents:[{parts:[{text:'Say hello in one word.'}]}]})
@@ -2190,54 +2351,15 @@ function clearRotationForBot(botId){
 async function suggestAccessories(top, bot){
   const accRow = document.getElementById('acc-row');
   if(!accRow) return;
-
   const allAcc = clothes.filter(iAcc);
   if(!allAcc.length){
     accRow.innerHTML = '<div class="acc-loading">Add shoes and accessories to your wardrobe to complete your look.</div>';
     return;
   }
-
-  if(!gemKey){ renderAccessories(groupAccessories(allAcc)); return; }
-
   try{
-    // Group by type so AI can pick best from each category
-    const shoes = allAcc.filter(a=>a.type==='shoes');
-    const watches = allAcc.filter(a=>a.type==='watch');
-    const belts = allAcc.filter(a=>a.type==='belt');
-    const bracelets = allAcc.filter(a=>a.type==='bracelet');
-    const rings = allAcc.filter(a=>a.type==='ring');
-    const chains = allAcc.filter(a=>['chain','necklace'].includes(a.type));
-    const others = allAcc.filter(a=>['sunglasses','bag'].includes(a.type));
-
-    const accDesc = allAcc.map(a=>'id:'+a.id+'|'+a.name+'|'+a.color+'|'+a.type+'|'+(a.style||'')).join('\n');
-
-    const prompt = 'You are an expert mens stylist. Complete this outfit with accessories:\n'
-      +'Top: '+top.name+' ('+top.color+', '+top.type+')\n'
-      +'Bottom: '+bot.name+' ('+bot.color+', '+bot.type+')\n\n'
-      +'Available accessories:\n'+accDesc+'\n\n'
-      +'Rules:\n'
-      +'1. Pick EXACTLY ONE pair of shoes (mandatory if available)\n'
-      +'2. Pick ONE watch if available\n'
-      +'3. For jewellery (bracelets, rings, chains) — pick ALL that work together for a layered look. Multiple bracelets, rings and chains can be worn together\n'
-      +'4. Pick belt only if outfit needs one\n'
-      +'5. Consider metal tones — gold with gold, silver with silver\n'
-      +'6. Match the vibe — casual outfit = casual accessories\n\n'
-      +'Respond ONLY as valid JSON:\n'
-      +'{"shoes_id":id_or_null,"watch_id":id_or_null,"jewellery_ids":[all bracelet/ring/chain ids that work together],"other_ids":[sunglasses/bag ids if relevant],"shoes_tip":"why this shoe works","jewellery_tip":"how to layer the jewellery"}';
-
-    const res = await callGem(prompt);
-    const p = JSON.parse(res.replace(/```json|```/g,'').trim());
-
-    const result = {
-      shoes: p.shoes_id ? allAcc.find(a=>String(a.id)==String(p.shoes_id)) : null,
-      watch: p.watch_id ? allAcc.find(a=>String(a.id)==String(p.watch_id)) : null,
-      jewellery: (p.jewellery_ids||[]).map(id=>allAcc.find(a=>String(a.id)==String(id))).filter(Boolean),
-      others: (p.other_ids||[]).map(id=>allAcc.find(a=>String(a.id)==String(id))).filter(Boolean),
-      shoesTip: p.shoes_tip||'',
-      jewelleryTip: p.jewellery_tip||''
-    };
-    renderAccessoriesGrouped(result);
+    renderAccessoriesGrouped(pickAccessories(top, bot, occ, window._wx||{temp:32}));
   }catch(e){
+    console.error('accessories error:', e);
     renderAccessories(groupAccessories(allAcc));
   }
 }
